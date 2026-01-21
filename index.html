@@ -1,0 +1,1016 @@
+<!doctype html>
+<html lang="th">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Gesture Tarot Pick (Web) — v2.1 Refined</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+            background: #0b0d12;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        }
+
+        #app {
+            position: fixed;
+            inset: 0;
+        }
+
+        #hud {
+            position: fixed;
+            left: 12px;
+            top: 12px;
+            z-index: 60;
+            font-size: 14px;
+            color: #e9eefc;
+            background: rgba(0, 0, 0, .35);
+            padding: 10px 12px;
+            border-radius: 12px;
+            backdrop-filter: blur(6px);
+            user-select: none;
+            max-width: min(820px, calc(100vw - 24px));
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* History container */
+        #historyContainer {
+            position: fixed;
+            right: 12px;
+            top: 12px;
+            z-index: 70;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        #historyList {
+            display: flex;
+            flex-direction: row-reverse;
+            flex-wrap: wrap-reverse;
+            gap: 6px;
+            pointer-events: auto;
+            max-width: 300px;
+            justify-content: flex-start;
+        }
+
+        .history-item {
+            width: 40px;
+            height: 60px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background-size: cover;
+            background-position: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .history-item:hover {
+            transform: scale(1.2);
+            z-index: 10;
+            border-color: #fff;
+        }
+
+        #clearHistoryBtn {
+            pointer-events: auto;
+            background: rgba(255, 50, 50, 0.2);
+            border: 1px solid rgba(255, 50, 50, 0.4);
+            color: #ffcccc;
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: none;
+            backdrop-filter: blur(4px);
+            transition: background 0.2s;
+        }
+
+        #clearHistoryBtn:hover {
+            background: rgba(255, 50, 50, 0.5);
+        }
+
+        #video {
+            position: fixed;
+            right: 12px;
+            bottom: 12px;
+            width: 200px;
+            height: auto;
+            z-index: 10;
+            border-radius: 12px;
+            opacity: .15;
+            transform: scaleX(-1);
+            background: #000;
+            pointer-events: none;
+        }
+
+        /* Reticle (cursor) */
+        #reticle {
+            position: fixed;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(0, 255, 200, .95);
+            border-radius: 50%;
+            z-index: 55;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 18px rgba(0, 255, 200, .38);
+            display: none;
+        }
+
+        /* Fan aim guide */
+        #aimGuide {
+            position: fixed;
+            left: 50%;
+            top: 60%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 200px;
+            z-index: 40;
+            pointer-events: none;
+            display: none;
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #aimHint {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            text-align: center;
+        }
+
+        /* Center drop zone (Ring mode) */
+        #centerZone {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            width: 260px;
+            height: 340px;
+            transform: translate(-50%, -50%);
+            border: 2px dashed rgba(255, 255, 255, .16);
+            border-radius: 18px;
+            z-index: 20;
+            pointer-events: none;
+            box-shadow: 0 0 46px rgba(255, 255, 255, .05) inset;
+            transition: opacity .25s ease, transform .25s ease;
+        }
+
+        #centerZone.hide {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(.96);
+        }
+
+        #hint {
+            position: fixed;
+            left: 12px;
+            bottom: 12px;
+            z-index: 60;
+            font-size: 12px;
+            line-height: 1.4;
+            color: rgba(255, 255, 255, .75);
+            background: rgba(0, 0, 0, .25);
+            padding: 8px 10px;
+            border-radius: 10px;
+            user-select: none;
+            max-width: min(980px, calc(100vw - 24px));
+            backdrop-filter: blur(4px);
+        }
+
+        /* Reading box */
+        #readingBox {
+            position: fixed;
+            left: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: min(400px, calc(40vw - 40px));
+            z-index: 80;
+            display: none;
+            color: #f6f7ff;
+            background: rgba(10, 12, 18, .90);
+            border: 1px solid rgba(255, 255, 255, .15);
+            border-radius: 18px;
+            padding: 24px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .7);
+            text-align: left;
+        }
+
+        #readingTitle {
+            font-weight: 700;
+            font-size: 22px;
+            margin: 0 0 20px 0;
+            letter-spacing: .5px;
+            color: #ffd700;
+            text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+            text-align: center;
+        }
+
+        .reading-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            text-align: left;
+            margin-bottom: 16px;
+        }
+
+        .reading-category {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .reading-cat-title {
+            font-weight: 700;
+            color: #88ccff;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .reading-cat-text {
+            font-size: 13px;
+            line-height: 1.4;
+            color: rgba(255, 255, 255, .85);
+        }
+
+        #readingHint {
+            margin-top: 16px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, .4);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+    <div id="hud">Loading…</div>
+
+    <div id="historyContainer">
+        <div id="historyList"></div>
+        <button id="clearHistoryBtn">Clear History</button>
+    </div>
+
+    <div id="centerZone"></div>
+
+    <div id="reticle"></div>
+
+    <div id="hint">
+        <b>Ring Mode:</b> Pinch to Pick & Drop in Center<br>
+        <b>Fan Mode:</b> Pinch & Drag Down to Select<br>
+        Open Palm = Fan Mode • Fist = Ring Mode • Shake = Shuffle
+    </div>
+
+    <div id="readingBox">
+        <div id="readingTitle"></div>
+        <div id="readingContent" class="reading-grid"></div>
+        <div id="readingHint">Hold Open Palm ~1s or Click to Close</div>
+    </div>
+
+    <video id="video" autoplay playsinline muted></video>
+
+    <!-- MediaPipe Hands -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js"></script>
+
+    <script type="module">
+        import * as THREE from "https://unpkg.com/three@0.160.0/build/three.module.js";
+
+        // --------------------------
+        // DOM
+        // --------------------------
+        const hud = document.getElementById("hud");
+        const reticle = document.getElementById("reticle");
+        const videoEl = document.getElementById("video");
+        const centerZoneEl = document.getElementById("centerZone");
+
+        const readingBox = document.getElementById("readingBox");
+        const readingTitle = document.getElementById("readingTitle");
+        const readingContent = document.getElementById("readingContent");
+
+        const historyList = document.getElementById("historyList");
+        const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+
+        const W = () => window.innerWidth;
+        const H = () => window.innerHeight;
+
+        // --------------------------
+        // CONFIG
+        // --------------------------
+        const FRONT_COUNT = 78;
+        const DISPLAY_N = 78;
+        const cardW = 1.6;
+        const cardH = 2.4;
+
+        // Ring layout
+        const RING_RADIUS = 5.5;
+        const RING_Y = 0.98;
+
+        // Fan layout
+        const FAN_Y = 0.8;
+        const FAN_Z = 2.5;
+
+        // Center (selected)
+        const CENTER_POS = new THREE.Vector3(0, 1.28, 2.25);
+
+        // Pinch thresholds
+        const PINCH_ON = 0.035;
+        const PINCH_OFF = 0.050;
+
+        // Gesture thresholds
+        const OPEN_HOLD_TO_CLOSE = 1.0;
+        const SHAKE_TRIGGER = 0.65;
+        const DRAG_DOWN_THRESHOLD = -0.4; // Slightly more drag down for Fan mode
+        const RING_SELECT_DRAG_DIST = 1.5; // Minimum drag distance in Ring mode to select
+
+        // --------------------------
+        // DATA (From CSV)
+        // --------------------------
+        const cardNames = [
+            "The Fool", "The Magician", "The High Priestess", "The Empress", "The Emperor",
+            "The Hierophant", "The Lovers", "The Chariot", "Strength", "The Hermit",
+            "Wheel of Fortune", "Justice", "The Hanged Man", "Death", "Temperance",
+            "The Devil", "The Tower", "The Star", "The Moon", "The Sun",
+            "Judgement", "The World",
+            "Ace of Wands", "Two of Wands", "Three of Wands", "Four of Wands", "Five of Wands",
+            "Six of Wands", "Seven of Wands", "Eight of Wands", "Nine of Wands", "Ten of Wands",
+            "Page of Wands", "Knight of Wands", "Queen of Wands", "King of Wands",
+            "Ace of Cups", "Two of Cups", "Three of Cups", "Four of Cups", "Five of Cups",
+            "Six of Cups", "Seven of Cups", "Eight of Cups", "Nine of Cups", "Ten of Cups",
+            "Page of Cups", "Knight of Cups", "Queen of Cups", "King of Cups",
+            "Ace of Swords", "Two of Swords", "Three of Swords", "Four of Swords", "Five of Swords",
+            "Six of Swords", "Seven of Swords", "Eight of Swords", "Nine of Swords", "Ten of Swords",
+            "Page of Swords", "Knight of Swords", "Queen of Swords", "King of Swords",
+            "Ace of Pentacles", "Two of Pentacles", "Three of Pentacles", "Four of Pentacles", "Five of Pentacles",
+            "Six of Pentacles", "Seven of Pentacles", "Eight of Pentacles", "Nine of Pentacles", "Ten of Pentacles",
+            "Page of Pentacles", "Knight of Pentacles", "Queen of Pentacles", "King of Pentacles"
+        ];
+
+        function getTarotMeta(id0) {
+            const name = cardNames[id0] || `Card #${id0}`;
+
+            // Generate generic meanings based on suit/arcana if not provided
+            let meaning = {
+                work: "การเปลี่ยนแปลงและการเริ่มต้นใหม่ในทิศทางที่ดี",
+                money: "มีเกณฑ์ได้รับโชคหรือผลตอบแทนจากสิ่งที่ทำ",
+                love: "ความสัมพันธ์มีความเข้าใจและพัฒนาไปในทางบวก",
+                advice: "เชื่อมั่นในสัญชาตญาณและลงมือทำทันที"
+            };
+
+            // Simple randomization for variety (in real app, use DB)
+            const seeds = [
+                { w: "งานหนักแต่คุ้มค่า", m: "ระวังรายจ่ายจุกจิก", l: "คนรักเอาใจใส่ดี", a: "อดทนรอเวลาที่เหมาะสม" },
+                { w: "โอกาสใหม่กำลังเข้ามา", m: "การเงินคล่องตัวดี", l: "อาจมีเรื่องเข้าใจผิดเล็กน้อย", a: "เปิดใจรับฟังคนรอบข้าง" },
+                { w: "ระวังความขัดแย้งในทีม", m: "มีโชคลาภลอยมา", l: "คนโสดมีเกณฑ์พบรัก", a: "อย่าประมาทในทุกย่างก้าว" },
+                { w: "ผลงานโดดเด่นเข้าตาผู้ใหญ่", m: "เก็บเงินไม่อยู่", l: "ความรักหวานชื่น", a: "รักษาสมดุลชีวิตให้ดี" }
+            ];
+            const seed = seeds[id0 % seeds.length];
+            meaning = { work: seed.w, money: seed.m, love: seed.l, advice: seed.a };
+
+            return { id: id0, name, meaning };
+        }
+
+        // --------------------------
+        // Texture paths (00.jpeg .. 77.jpeg)
+        // --------------------------
+        function frontPathByCardIndex(id0) {
+            return `./assets/fronts/${String(id0).padStart(2, "0")}.jpeg`;
+        }
+
+        // --------------------------
+        // Three.js setup
+        // --------------------------
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(W(), H());
+        renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+        document.getElementById("app").appendChild(renderer.domElement);
+
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.Fog(0x0b0d12, 6, 20);
+
+        const camera3D = new THREE.PerspectiveCamera(45, W() / H(), 0.1, 100);
+
+        // Base camera
+        const camBasePos = new THREE.Vector3(0, 2.0, 9.5);
+        const camBaseLook = new THREE.Vector3(0, 1.0, 0);
+
+        // Cinematic camera (zoom in)
+        const camCinePos = new THREE.Vector3(0, 1.5, 5.0);
+        const camCineLook = new THREE.Vector3(0, 1.2, 1.0);
+
+        camera3D.position.copy(camBasePos);
+        camera3D.lookAt(camBaseLook);
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+        const dir = new THREE.DirectionalLight(0xffffff, 1.0);
+        dir.position.set(3, 6, 4);
+        scene.add(dir);
+
+        const ground = new THREE.Mesh(
+            new THREE.PlaneGeometry(60, 60),
+            new THREE.MeshStandardMaterial({ color: 0x0b0d12, roughness: 1, metalness: 0 })
+        );
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -2.5;
+        scene.add(ground);
+
+        // --------------------------
+        // Textures
+        // --------------------------
+        const texLoader = new THREE.TextureLoader();
+        function makeTex(url) {
+            const t = texLoader.load(url);
+            t.colorSpace = THREE.SRGBColorSpace;
+            t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+            return t;
+        }
+        const backTex = makeTex("./assets/back.jpeg");
+
+        function loadFrontTex(id0) {
+            return makeTex(frontPathByCardIndex(id0));
+        }
+
+        // --------------------------
+        // Cards
+        // --------------------------
+        const cards = [];
+        const pickables = [];
+        let deckOrder = [];
+        let dealtIds = [];
+
+        function initDeck() {
+            deckOrder = Array.from({ length: FRONT_COUNT }, (_, i) => i);
+            shuffleArray(deckOrder);
+            dealtIds = deckOrder.slice(0, DISPLAY_N);
+        }
+
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+        }
+
+        function clearCards() {
+            for (const c of cards) scene.remove(c);
+            cards.length = 0;
+            pickables.length = 0;
+        }
+
+        function createCard(slotIndex, id0) {
+            const group = new THREE.Group();
+            const planeGeo = new THREE.PlaneGeometry(cardW, cardH);
+
+            const frontMat = new THREE.MeshStandardMaterial({ map: loadFrontTex(id0), roughness: 0.95, metalness: 0.0 });
+            const backMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.95, metalness: 0.0 });
+
+            const front = new THREE.Mesh(planeGeo, frontMat);
+            front.position.z = 0.026;
+
+            const back = new THREE.Mesh(planeGeo, backMat);
+            back.rotation.y = Math.PI;
+            back.position.z = -0.026;
+
+            const edge = new THREE.Mesh(
+                new THREE.BoxGeometry(cardW, cardH, 0.04),
+                new THREE.MeshStandardMaterial({ color: 0x111522, roughness: 1, metalness: 0 })
+            );
+
+            group.add(edge, front, back);
+
+            group.userData.slot = slotIndex;
+            group.userData.cardId0 = id0;
+            group.userData.meta = getTarotMeta(id0);
+            group.userData.isSelected = false;
+            group.userData.pickMeshes = [front, back];
+
+            // anim state
+            group.userData.centerT = 0;
+            group.userData.flipT = 0;
+            group.userData.dragStartY = null;
+
+            return group;
+        }
+
+        function dealVisible() {
+            clearCards();
+            for (let i = 0; i < DISPLAY_N; i++) {
+                const id0 = dealtIds[i];
+                const c = createCard(i, id0);
+                scene.add(c);
+                cards.push(c);
+                pickables.push(...c.userData.pickMeshes);
+            }
+        }
+
+        initDeck();
+        dealVisible();
+
+        // --------------------------
+        // Layout modes
+        // --------------------------
+        let layoutMode = "ring";   // "ring" | "fan"
+        let rotationT = 0;
+
+        function computeFanSpacing() {
+            // Overlap cards to fit screen
+            const visibleWidth = 12.0;
+            const spacing = visibleWidth / DISPLAY_N;
+            return spacing;
+        }
+
+        function desiredPose(card) {
+            const i = card.userData.slot;
+
+            if (layoutMode === "fan") {
+                const spacing = computeFanSpacing();
+                const center = (DISPLAY_N - 1) / 2;
+                const x = (i - center) * spacing;
+                const y = FAN_Y;
+                const z = FAN_Z;
+                const yaw = 0;
+                return { x, y, z, yaw, mode: "fan" };
+            }
+
+            // ring
+            const baseAngle = (i / DISPLAY_N) * Math.PI * 2;
+            const angle = baseAngle + rotationT;
+            const x = Math.cos(angle) * RING_RADIUS;
+            const z = Math.sin(angle) * RING_RADIUS;
+            const y = RING_Y;
+            return { x, y, z, yaw: null, mode: "ring" };
+        }
+
+        // --------------------------
+        // Picking & drag
+        // --------------------------
+        const raycaster = new THREE.Raycaster();
+        const ndc = new THREE.Vector2(0, 0);
+        const planeHit = new THREE.Vector3();
+        const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -2.2);
+
+        let hoverCard = null;
+        let grabbedCard = null;
+        let grabbedOffset = new THREE.Vector3();
+
+        let selectedCard = null;
+        let allowPick = true;
+        let freezeOthers = false;
+
+        // --------------------------
+        // Cursor / gestures
+        // --------------------------
+        let cursorX = 0, cursorY = 0;
+        let cursorValid = false;
+
+        let pinch = false, pinchEdgeOn = false, pinchEdgeOff = false;
+        let openHold = 0;
+        let lastHandX = null;
+        let shakeEnergy = 0;
+
+        function setCursorFromLandmark(normX, normY) {
+            const x = 1 - normX; // mirror
+            const y = normY;
+            const nx = (x * 2) - 1;
+            const ny = -((y * 2) - 1);
+
+            const a = 0.22;
+            cursorX = cursorX + (nx - cursorX) * a;
+            cursorY = cursorY + (ny - cursorY) * a;
+
+            ndc.set(cursorX, cursorY);
+            cursorValid = true;
+
+            const px = ((cursorX + 1) * 0.5) * W();
+            const py = ((-cursorY + 1) * 0.5) * H();
+            reticle.style.left = `${px}px`;
+            reticle.style.top = `${py}px`;
+            reticle.style.display = "block";
+        }
+
+        function updatePinch(lm) {
+            const thumb = lm[4], index = lm[8];
+            const dist = Math.hypot(thumb.x - index.x, thumb.y - index.y);
+
+            pinchEdgeOn = false; pinchEdgeOff = false;
+            if (!pinch && dist < PINCH_ON) { pinch = true; pinchEdgeOn = true; }
+            else if (pinch && dist > PINCH_OFF) { pinch = false; pinchEdgeOff = true; }
+            return dist;
+        }
+
+        function isOpenPalm(lm) {
+            const idx = lm[8].y < lm[6].y;
+            const mid = lm[12].y < lm[10].y;
+            const ring = lm[16].y < lm[14].y;
+            const pin = lm[20].y < lm[18].y;
+            return [idx, mid, ring, pin].filter(Boolean).length >= 3;
+        }
+        function isFist(lm) {
+            const idx = lm[8].y > lm[6].y;
+            const mid = lm[12].y > lm[10].y;
+            const ring = lm[16].y > lm[14].y;
+            const pin = lm[20].y > lm[18].y;
+            return [idx, mid, ring, pin].filter(Boolean).length >= 3;
+        }
+
+        function computeHover() {
+            if (!cursorValid || grabbedCard || !allowPick) return;
+
+            raycaster.setFromCamera(ndc, camera3D);
+            const hits = raycaster.intersectObjects(pickables, false);
+
+            let found = null;
+            for (const h of hits) {
+                const g = h.object.parent;
+                if (g && !g.userData.isSelected) { found = g; break; }
+            }
+            hoverCard = found;
+
+            // highlight
+            for (const c of cards) {
+                if (c.userData.isSelected) continue;
+                const target = (hoverCard === c) ? 1.1 : 1.0;
+                c.scale.lerp(new THREE.Vector3(target, target, target), 0.16);
+            }
+        }
+
+        function beginGrab() {
+            if (!hoverCard || hoverCard.userData.isSelected || !allowPick) return;
+            grabbedCard = hoverCard;
+            grabbedCard.userData.dragStartY = grabbedCard.position.y;
+            grabbedCard.userData.grabPos = grabbedCard.position.clone(); // Store initial grab position
+
+            raycaster.setFromCamera(ndc, camera3D);
+            raycaster.ray.intersectPlane(dragPlane, planeHit);
+            grabbedOffset.copy(grabbedCard.position).sub(planeHit);
+
+            // bring forward
+            grabbedCard.position.z = 2.2;
+        }
+
+        function dragGrabbed() {
+            if (!grabbedCard || !cursorValid) return;
+
+            raycaster.setFromCamera(ndc, camera3D);
+            raycaster.ray.intersectPlane(dragPlane, planeHit);
+
+            grabbedCard.position.copy(planeHit).add(grabbedOffset);
+
+            // In fan mode, if dragged down enough, select it
+            if (layoutMode === "fan") {
+                const dy = grabbedCard.position.y - grabbedCard.userData.dragStartY;
+                if (dy < DRAG_DOWN_THRESHOLD) {
+                    selectCard(grabbedCard);
+                    grabbedCard = null;
+                    return;
+                }
+            }
+
+            grabbedCard.scale.lerp(new THREE.Vector3(1.12, 1.12, 1.12), 0.22);
+
+            // Keep back facing in fan mode
+            if (layoutMode === "fan") {
+                grabbedCard.rotation.x += (0 - grabbedCard.rotation.x) * 0.20;
+                grabbedCard.rotation.z += (0 - grabbedCard.rotation.z) * 0.20;
+                grabbedCard.rotation.y += (Math.PI - grabbedCard.rotation.y) * 0.22;
+            }
+        }
+
+        function isInCenterZone() {
+            const rect = centerZoneEl.getBoundingClientRect();
+            const px = ((cursorX + 1) * 0.5) * W();
+            const py = ((-cursorY + 1) * 0.5) * H();
+            return px > rect.left && px < rect.right && py > rect.top && py < rect.bottom;
+        }
+
+        function showReading(card) {
+            const meta = card.userData.meta;
+            readingTitle.textContent = meta?.name ?? `Card #${card.userData.cardId0}`;
+
+            const m = meta.meaning;
+            readingContent.innerHTML = `
+                <div class="reading-category">
+                    <div class="reading-cat-title">Work</div>
+                    <div class="reading-cat-text">${m.work}</div>
+                </div>
+                <div class="reading-category">
+                    <div class="reading-cat-title">Money</div>
+                    <div class="reading-cat-text">${m.money}</div>
+                </div>
+                <div class="reading-category">
+                    <div class="reading-cat-title">Love</div>
+                    <div class="reading-cat-text">${m.love}</div>
+                </div>
+                <div class="reading-category">
+                    <div class="reading-cat-title">Advice</div>
+                    <div class="reading-cat-text">${m.advice}</div>
+                </div>
+            `;
+            readingBox.style.display = "block";
+        }
+        function hideReading() {
+            readingBox.style.display = "none";
+        }
+
+        // History
+        const historyData = [];
+
+        function addToHistory(card) {
+            const id0 = card.userData.cardId0;
+            // Prevent duplicates? Or allow? Let's allow.
+            historyData.push(id0);
+            renderHistory();
+        }
+
+        function renderHistory() {
+            historyList.innerHTML = "";
+            if (historyData.length > 0) {
+                clearHistoryBtn.style.display = "block";
+                historyData.forEach(id0 => {
+                    const el = document.createElement("div");
+                    el.className = "history-item";
+                    el.style.backgroundImage = `url('${frontPathByCardIndex(id0)}')`;
+                    el.title = getTarotMeta(id0).name;
+                    el.onclick = () => {
+                        // Optional: show name on click
+                        // alert(getTarotMeta(id0).name);
+                    };
+                    historyList.appendChild(el);
+                });
+            } else {
+                clearHistoryBtn.style.display = "none";
+            }
+        }
+
+        clearHistoryBtn.addEventListener("click", () => {
+            historyData.length = 0;
+            renderHistory();
+        });
+
+        function selectCard(card) {
+            if (card.userData.isSelected) return;
+
+            card.userData.isSelected = true;
+            card.userData.centerT = 0;
+            card.userData.flipT = 0;
+
+            // start back-facing then flip to front
+            card.rotation.set(0, Math.PI, 0);
+
+            selectedCard = card;
+            allowPick = false;
+            freezeOthers = true;
+
+            // hide other cards
+            for (const c of cards) {
+                if (c !== card) c.visible = false;
+            }
+
+            centerZoneEl.classList.add("hide");
+
+            addToHistory(card);
+            showReading(card);
+        }
+
+        function resetAfterReading() {
+            hideReading();
+
+            if (selectedCard) {
+                selectedCard.userData.isSelected = false;
+                selectedCard.scale.set(1, 1, 1);
+                selectedCard.userData.centerT = 0;
+                selectedCard.userData.flipT = 0;
+                selectedCard.visible = true;
+                selectedCard = null;
+            }
+
+            for (const c of cards) c.visible = true;
+
+            allowPick = true;
+            freezeOthers = false;
+
+            layoutMode = "ring";
+            centerZoneEl.classList.remove("hide");
+        }
+
+        function endGrab() {
+            if (!grabbedCard) return;
+
+            if (layoutMode === "ring") {
+                const dist = grabbedCard.position.distanceTo(grabbedCard.userData.grabPos);
+                if (isInCenterZone() && dist > RING_SELECT_DRAG_DIST) {
+                    selectCard(grabbedCard);
+                }
+            }
+            // Fan mode select is handled in dragGrabbed (drag down)
+
+            if (grabbedCard) {
+                grabbedCard.scale.set(1, 1, 1);
+                grabbedCard = null;
+            }
+            hoverCard = null;
+        }
+
+        function shuffleDeck() {
+            shuffleArray(deckOrder);
+            dealtIds = deckOrder.slice(0, DISPLAY_N);
+            if (selectedCard) return;
+            dealVisible();
+            rotationT += (Math.random() * 2 - 1) * 1.8;
+        }
+
+        // --------------------------
+        // Camera cinematic
+        // --------------------------
+        let cineT = 0;
+
+        function updateCamera() {
+            const target = (selectedCard ? 1 : 0);
+            cineT += (target - cineT) * 0.08;
+
+            const t = cineT * cineT * (3 - 2 * cineT);
+
+            const pos = camBasePos.clone().lerp(camCinePos, t);
+            const look = camBaseLook.clone().lerp(camCineLook, t);
+
+            camera3D.position.lerp(pos, 0.18);
+            camera3D.lookAt(look);
+        }
+
+        // --------------------------
+        // Animation loop
+        // --------------------------
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (!freezeOthers && layoutMode === "ring" && !grabbedCard && allowPick) {
+                rotationT += 0.006;
+            }
+
+            centerZoneEl.style.opacity = (layoutMode === "ring" && allowPick && !selectedCard) ? "1" : "0";
+
+            for (const c of cards) {
+                if (!c.visible) continue;
+                if (c === grabbedCard) continue;
+                if (c.userData.isSelected) continue;
+
+                const d = desiredPose(c);
+
+                c.position.x += (d.x - c.position.x) * 0.12;
+                c.position.y += (d.y - c.position.y) * 0.12;
+                c.position.z += (d.z - c.position.z) * 0.12;
+
+                if (d.mode === "ring") {
+                    const center = new THREE.Vector3(0, RING_Y, 0);
+                    c.lookAt(center);
+                } else {
+                    // fan mode: show BACK side always
+                    c.rotation.x += (0 - c.rotation.x) * 0.14;
+                    c.rotation.z += (0 - c.rotation.z) * 0.14;
+                    c.rotation.y += (Math.PI - c.rotation.y) * 0.14;
+                }
+            }
+
+            computeHover();
+            dragGrabbed();
+
+            // selected animation
+            for (const c of cards) {
+                if (!c.userData.isSelected) continue;
+
+                c.userData.centerT = Math.min(1, (c.userData.centerT ?? 0) + 0.03);
+                const tt = c.userData.centerT;
+                const ease = tt * tt * (3 - 2 * tt);
+
+                c.position.lerp(CENTER_POS, ease);
+                // Smaller size as requested
+                c.scale.lerp(new THREE.Vector3(1.05, 1.05, 1.05), 0.10);
+
+                c.rotation.x += (0 - c.rotation.x) * 0.18;
+                c.rotation.z += (0 - c.rotation.z) * 0.18;
+
+                c.userData.flipT = Math.min(1, (c.userData.flipT ?? 0) + 0.022);
+                const ft = c.userData.flipT;
+                const fe = ft * ft * (3 - 2 * ft);
+                c.rotation.y = Math.PI * (1 - fe);
+            }
+
+            updateCamera();
+            renderer.render(scene, camera3D);
+        }
+
+        window.addEventListener("resize", () => {
+            camera3D.aspect = W() / H();
+            camera3D.updateProjectionMatrix();
+            renderer.setSize(W(), H());
+        });
+
+        // --------------------------
+        // MediaPipe Hands
+        // --------------------------
+        const hands = new Hands({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${file}`,
+        });
+
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.65,
+            minTrackingConfidence: 0.6,
+        });
+
+        hands.onResults((res) => {
+            cursorValid = false;
+            reticle.style.display = "none";
+
+            if (res.multiHandLandmarks && res.multiHandLandmarks.length) {
+                const lm = res.multiHandLandmarks[0];
+
+                setCursorFromLandmark(lm[8].x, lm[8].y);
+
+                const dist = updatePinch(lm);
+                const openPalm = isOpenPalm(lm);
+                const fist = isFist(lm);
+
+                if (openPalm) openHold += 1 / 60;
+                else openHold = Math.max(0, openHold - 2 / 60);
+
+                if (selectedCard && openHold > OPEN_HOLD_TO_CLOSE) {
+                    resetAfterReading();
+                    openHold = 0;
+                }
+
+                if (!selectedCard && allowPick && !grabbedCard) {
+                    if (openPalm) layoutMode = "fan";
+                    else layoutMode = "ring";
+                }
+
+                const hx = lm[0].x;
+                if (lastHandX !== null) {
+                    const dx = Math.abs(hx - lastHandX);
+                    if (fist && allowPick && !grabbedCard && !selectedCard) {
+                        shakeEnergy += dx * 10;
+                        shakeEnergy *= 0.92;
+                    } else {
+                        shakeEnergy *= 0.85;
+                    }
+                }
+                lastHandX = hx;
+
+                if (shakeEnergy > SHAKE_TRIGGER && fist && allowPick && !grabbedCard && !selectedCard) {
+                    shuffleDeck();
+                    shakeEnergy = 0;
+                }
+
+                if (pinchEdgeOn && !grabbedCard && allowPick) beginGrab();
+                if (pinchEdgeOff && grabbedCard) endGrab();
+
+                hud.textContent =
+                    `Mode: ${layoutMode.toUpperCase()} | Pinch: ${pinch ? "ON" : "OFF"} | ` +
+                    (grabbedCard ? "Grabbing" : "Hovering");
+
+            } else {
+                hud.textContent = "Show your hand to start";
+            }
+        });
+
+        async function startCamera() {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: 640, height: 480, facingMode: "user" },
+                audio: false
+            });
+            videoEl.srcObject = stream;
+
+            await new Promise((resolve) => {
+                videoEl.onloadedmetadata = () => resolve();
+            });
+            await videoEl.play();
+
+            async function loop() {
+                await hands.send({ image: videoEl });
+                requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        try {
+            await startCamera();
+            animate();
+        } catch (e) {
+            console.error(e);
+            alert("Camera error: " + e.message);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1106 @@
+<!doctype html>
+<html lang="th">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Gesture Tarot Pick (Web) — v1.1 Complete</title>
+
+    <style>
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+            background: #0b0d12;
+        }
+
+        #app {
+            position: fixed;
+            inset: 0;
+        }
+
+        #hud {
+            position: fixed;
+            left: 12px;
+            top: 12px;
+            z-index: 60;
+            font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto;
+            color: #e9eefc;
+            background: rgba(0, 0, 0, .35);
+            padding: 10px 12px;
+            border-radius: 12px;
+            backdrop-filter: blur(6px);
+            user-select: none;
+            max-width: min(920px, calc(100vw - 24px));
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #video {
+            position: fixed;
+            right: 12px;
+            bottom: 12px;
+            width: 240px;
+            height: auto;
+            z-index: 10;
+            border-radius: 12px;
+            opacity: .18;
+            transform: scaleX(-1);
+            background: #000;
+        }
+
+        /* Reticle (cursor) */
+        #reticle {
+            position: fixed;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(0, 255, 200, .95);
+            border-radius: 50%;
+            z-index: 55;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 18px rgba(0, 255, 200, .38);
+            display: none;
+        }
+
+        /* Fan aim guide: crosshair line */
+        #aimGuide {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: min(820px, calc(100vw - 60px));
+            z-index: 40;
+            pointer-events: none;
+            display: none;
+            text-align: center;
+        }
+
+        #aimLine {
+            width: 100%;
+            height: 0;
+            border-top: 2px solid rgba(0, 255, 200, .35);
+            box-shadow: 0 0 18px rgba(0, 255, 200, .16);
+            margin: 0 auto;
+        }
+
+        #aimDot {
+            position: relative;
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 255, 200, .9);
+            background: rgba(0, 255, 200, .12);
+            box-shadow: 0 0 18px rgba(0, 255, 200, .30);
+            transform: translateY(-8px);
+        }
+
+        #aimHint {
+            display: inline-block;
+            margin-top: 12px;
+            font: 12px/1.4 system-ui, -apple-system, Segoe UI, Roboto;
+            color: rgba(255, 255, 255, .72);
+            background: rgba(0, 0, 0, .25);
+            padding: 6px 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, .10);
+            backdrop-filter: blur(6px);
+            white-space: nowrap;
+        }
+
+        /* Center drop zone (ring mode) */
+        #centerZone {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            width: 260px;
+            height: 340px;
+            transform: translate(-50%, -50%);
+            border: 2px dashed rgba(255, 255, 255, .16);
+            border-radius: 18px;
+            z-index: 20;
+            pointer-events: none;
+            box-shadow: 0 0 46px rgba(255, 255, 255, .05) inset;
+            transition: opacity .25s ease, transform .25s ease;
+        }
+
+        #centerZone.hide {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(.96);
+        }
+
+        #hint {
+            position: fixed;
+            left: 12px;
+            bottom: 12px;
+            z-index: 60;
+            font: 12px/1.4 system-ui, -apple-system, Segoe UI, Roboto;
+            color: rgba(255, 255, 255, .75);
+            background: rgba(0, 0, 0, .25);
+            padding: 8px 10px;
+            border-radius: 10px;
+            user-select: none;
+            max-width: min(1100px, calc(100vw - 24px));
+        }
+
+        /* Reading box */
+        #readingBox {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: min(620px, calc(100vw - 40px));
+            z-index: 80;
+            display: none;
+            color: #f6f7ff;
+            background: rgba(8, 10, 16, .55);
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 18px;
+            padding: 16px 18px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 12px 50px rgba(0, 0, 0, .45);
+        }
+
+        #readingTitle {
+            font: 800 20px/1.2 system-ui, -apple-system, Segoe UI, Roboto;
+            margin: 0 0 10px 0;
+            letter-spacing: .2px;
+        }
+
+        #readingMeaning {
+            font: 14px/1.65 system-ui, -apple-system, Segoe UI, Roboto;
+            margin: 0;
+            color: rgba(255, 255, 255, .90);
+        }
+
+        #readingHint {
+            margin-top: 12px;
+            font: 12px/1.4 system-ui, -apple-system, Segoe UI, Roboto;
+            color: rgba(255, 255, 255, .62);
+        }
+
+        #readingMeaning b {
+            color: rgba(255, 255, 255, .95);
+        }
+
+        /* Pick history badge (multi cards) */
+        #pickedBadge {
+            position: fixed;
+            right: 16px;
+            top: 16px;
+            z-index: 85;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            padding: 12px;
+            border-radius: 16px;
+            background: rgba(8, 10, 16, .55);
+            border: 1px solid rgba(255, 255, 255, .12);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, .35);
+            max-width: 260px;
+        }
+
+        #pickedList {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .pickedRow {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .pickedRow img {
+            width: 46px;
+            height: 68px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, .16);
+        }
+
+        .pickedRow .t1 {
+            font: 800 12px system-ui, -apple-system, Segoe UI, Roboto;
+            color: rgba(255, 255, 255, .92);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pickedRow .t2 {
+            font: 12px system-ui, -apple-system, Segoe UI, Roboto;
+            color: rgba(255, 255, 255, .62);
+            margin-top: 3px;
+        }
+
+        #clearHistory {
+            appearance: none;
+            border: 0;
+            cursor: pointer;
+            color: rgba(255, 255, 255, .75);
+            background: rgba(255, 255, 255, .08);
+            border: 1px solid rgba(255, 255, 255, .10);
+            padding: 6px 10px;
+            border-radius: 12px;
+            font: 12px system-ui, -apple-system, Segoe UI, Roboto;
+        }
+
+        #clearHistory:hover {
+            background: rgba(255, 255, 255, .12);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+    <div id="hud">Loading…</div>
+
+    <div id="centerZone"></div>
+
+    <div id="aimGuide">
+        <div id="aimLine"></div>
+        <div id="aimDot"></div>
+        <div id="aimHint">Fan mode: แบมือเพื่อแผ่ • ชี้นิ้วค้าง ~0.55s เพื่อเลือกใบตรงกลาง</div>
+    </div>
+
+    <div id="reticle"></div>
+
+    <div id="hint">
+        Pinch = หยิบ/ลาก/ปล่อย • ปล่อยในกรอบกลาง (Ring) = เปิดไพ่ + คำทำนาย •
+        แบมือ = Fan (หลังไพ่, คลี่เป็นเส้นตรง) • ชี้นิ้ว = เลือกใน Fan • กำหมัดแล้วเขย่า = สับไพ่
+    </div>
+
+    <div id="readingBox">
+        <div id="readingTitle"></div>
+        <div id="readingMeaning"></div>
+        <div id="readingHint">แบมือค้าง ~1 วินาที เพื่อปิดผล และกลับไปเลือกใหม่</div>
+    </div>
+
+    <div id="pickedBadge">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+            <div style="color:rgba(255,255,255,.92);font:900 12px system-ui,-apple-system,Segoe UI,Roboto;">
+                Picked history
+                <div
+                    style="color:rgba(255,255,255,.60);font:12px system-ui,-apple-system,Segoe UI,Roboto;margin-top:4px;">
+                    ล่าสุดอยู่ด้านบน
+                </div>
+            </div>
+            <button id="clearHistory">Clear</button>
+        </div>
+        <div id="pickedList"></div>
+    </div>
+
+    <video id="video" autoplay playsinline muted></video>
+
+    <!-- MediaPipe Hands (GLOBAL scripts) -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js"></script>
+
+    <!-- PART 1 END -->
+    <!-- PART 2/2 START -->
+    <script type="module">
+        import * as THREE from "https://unpkg.com/three@0.160.0/build/three.module.js";
+
+        // --------------------------
+        // DOM
+        // --------------------------
+        const hud = document.getElementById("hud");
+        const reticle = document.getElementById("reticle");
+        const videoEl = document.getElementById("video");
+        const centerZoneEl = document.getElementById("centerZone");
+        const aimGuideEl = document.getElementById("aimGuide");
+
+        const readingBox = document.getElementById("readingBox");
+        const readingTitle = document.getElementById("readingTitle");
+        const readingMeaning = document.getElementById("readingMeaning");
+
+        const pickedBadge = document.getElementById("pickedBadge");
+        const pickedList = document.getElementById("pickedList");
+        const clearHistoryBtn = document.getElementById("clearHistory");
+
+        const pickedHistory = []; // {id1, name}
+        function renderPickedHistory() {
+            pickedList.innerHTML = "";
+            for (const item of pickedHistory) {
+                const row = document.createElement("div");
+                row.className = "pickedRow";
+
+                const img = document.createElement("img");
+                img.src = frontPathByCardIndex(item.id1);
+
+                const txt = document.createElement("div");
+                txt.style.minWidth = "0";
+                const t1 = document.createElement("div");
+                t1.className = "t1";
+                t1.textContent = item.name;
+                const t2 = document.createElement("div");
+                t2.className = "t2";
+                t2.textContent = `#${String(item.id1).padStart(2, "0")}`;
+                txt.appendChild(t1); txt.appendChild(t2);
+
+                row.appendChild(img);
+                row.appendChild(txt);
+                pickedList.appendChild(row);
+            }
+            pickedBadge.style.display = pickedHistory.length ? "flex" : "none";
+        }
+        clearHistoryBtn.onclick = () => {
+            pickedHistory.length = 0;
+            renderPickedHistory();
+        };
+
+        const W = () => window.innerWidth;
+        const H = () => window.innerHeight;
+
+        // --------------------------
+        // CONFIG
+        // --------------------------
+        const FRONT_COUNT = 78;         // คุณมีครบแล้ว
+        const DISPLAY_N = 18;           // จำนวนไพ่ที่โชว์ในฉาก (ลื่นกว่า 78)
+        const cardW = 1.6;
+        const cardH = 2.4;
+
+        // Ring layout
+        const RING_RADIUS = 3.35;
+        const RING_Y = 0.98;
+
+        // Fan layout (เส้นตรงพอดีจอ)
+        const FAN_Y = 1.05;
+        const FAN_Z = 1.25;
+
+        // Center (selected) — ปรับให้พอดีจอมากขึ้น
+        const CENTER_POS = new THREE.Vector3(0, 1.18, 2.55);
+
+        // Pinch thresholds
+        const PINCH_ON = 0.035;
+        const PINCH_OFF = 0.050;
+
+        // Gesture thresholds
+        const OPEN_HOLD_TO_CLOSE = 1.0;      // seconds
+        const SHAKE_TRIGGER = 0.65;
+
+        // Fan point select
+        let pointHold = 0;
+        const POINT_SELECT_HOLD = 0.55;
+
+        // --------------------------
+        // Tarot Meta (Work/Money/Love/Advice)
+        // --------------------------
+        const major = {
+            1: { name: "The Fool (คนโง่)", work: "เริ่มต้นใหม่ กล้าลองงาน/โปรเจกต์ใหม่ แต่ต้องมีแผนขั้นต่ำ", money: "มีรายจ่ายเพื่อเริ่มต้น ระวังใช้เพลิน", love: "เปิดใจ พบคนใหม่/เริ่มใหม่ได้", advice: "กล้าลอง แต่ตั้งขอบเขตความเสี่ยง" },
+            2: { name: "The Magician (นักมายากล)", work: "ทักษะพร้อม โชว์ของได้ ปิดงานได้ด้วยความมั่นใจ", money: "มีช่องทางทำเงินจากฝีมือ/การต่อรอง", love: "สื่อสารเก่ง ดึงดูดได้ดี", advice: "โฟกัส 1-2 เรื่องที่ทำแล้วปังที่สุด" },
+            3: { name: "The High Priestess (สตรีนักบวช)", work: "ข้อมูลยังไม่ครบ อย่ารีบตัดสินใจ", money: "ชะลอการลงทุนที่ยังไม่ชัด", love: "มีเรื่องเก็บไว้ในใจ ต้องคุยกันด้วยความนุ่มนวล", advice: "ฟังสัญชาตญาณและเช็คหลักฐาน" },
+            4: { name: "The Empress (จักรพรรดินี)", work: "งานสร้างสรรค์/งานดูแลคนเด่น เติบโตต่อเนื่อง", money: "รายได้มั่นคงขึ้น มีของดีที่ทำเงิน", love: "อบอุ่น เอื้อเฟื้อ ความสัมพันธ์ดี", advice: "ดูแลตัวเองและสร้างสภาพแวดล้อมที่ดี" },
+            5: { name: "The Emperor (จักรพรรดิ)", work: "ต้องจัดระบบ วางโครงสร้าง/กติกาให้ชัด", money: "บริหารเงินเป็น วางแผนระยะยาว", love: "ความสัมพันธ์ต้องชัดเจนเรื่องขอบเขต", advice: "ตัดสินใจแบบผู้นำและรับผิดชอบ" },
+            6: { name: "The Hierophant (นักบวชใหญ่)", work: "ทำตามมาตรฐาน/กระบวนการจะเวิร์ก", money: "รายรับมั่นคงจากงานหลัก/องค์กร", love: "ความสัมพันธ์จริงจัง มีกรอบ/ครอบครัวเข้ามา", advice: "เรียนรู้จากคนมีประสบการณ์" },
+            7: { name: "The Lovers (คนรัก)", work: "ต้องเลือกทางที่ใช่/พาร์ทเนอร์ที่เหมาะ", money: "ดีลสำคัญต้องชัดเจนเรื่องเงื่อนไข", love: "ความรัก/ความสัมพันธ์เป็นประเด็นหลัก", advice: "เลือกให้ตรงค่านิยม ไม่เอาแค่ความรู้สึก" },
+            8: { name: "The Chariot (ราชรถ)", work: "เดินหน้าลุย งานคืบเร็วถ้าคุมทิศทางดี", money: "มีโอกาสเพิ่มรายได้จากการเร่งสปีด", love: "ต้องคุยให้ตรงกัน ไม่งั้นแรงปะทะสูง", advice: "โฟกัส เป้าหมายเดียวแล้วไปให้สุด" },
+            9: { name: "Strength (พละกำลัง)", work: "ชนะด้วยความอดทนและท่าทีที่นุ่มแต่มั่น", money: "คุมวินัยการใช้เงินได้ดี", love: "อ่อนโยน เข้าใจกันมากขึ้น", advice: "ใจเย็น แล้วผลลัพธ์จะออกมาดีกว่า" },
+            10: { name: "The Hermit (ฤาษี)", work: "เหมาะกับงานคิด วางแผน ทำคนเดียว/เงียบ ๆ", money: "ตัดรายจ่ายไม่จำเป็น เก็บเงิน", love: "ต้องการพื้นที่ส่วนตัว", advice: "ถอยหนึ่งก้าวเพื่อมองภาพใหญ่" },
+            11: { name: "Wheel of Fortune (กงล้อโชคชะตา)", work: "โอกาสมาไว เปลี่ยนสถานการณ์ได้", money: "มีโชค/จังหวะดี แต่ผันผวน", love: "ความสัมพันธ์เปลี่ยนเฟส", advice: "คว้าโอกาส แต่เตรียมแผนสำรอง" },
+            12: { name: "Justice (ความยุติธรรม)", work: "งานเอกสาร/ข้อตกลงต้องเป๊ะ", money: "จัดสมดุลรายรับ-รายจ่าย เคลียร์หนี้", love: "ต้องแฟร์ ซื่อสัตย์", advice: "ตัดสินใจด้วยเหตุผลและความจริง" },
+            13: { name: "The Hanged Man (คนถูกแขวน)", work: "ชะลอเพื่อปรับมุมมอง แก้เกมก่อนลุยต่อ", money: "เลื่อนการลงทุน/ซื้อของใหญ่", love: "รอจังหวะ อย่าฝืน", advice: "ยอมเสียบางอย่างเพื่อได้สิ่งที่ใช่กว่า" },
+            14: { name: "Death (ความตาย)", work: "จบสิ่งเก่า เปิดบทใหม่", money: "ตัดรายจ่าย/รูปแบบหารายได้เดิมที่ไม่เวิร์ก", love: "รีเซ็ตความสัมพันธ์หรือเริ่มใหม่", advice: "ปล่อยของเก่า แล้วจะเบาขึ้น" },
+            15: { name: "Temperance (ความพอดี)", work: "ผสมทักษะ/ทีมให้ลงตัว ค่อย ๆ ดีขึ้น", money: "วางแผนแบบพอดี ไม่สุดโต่ง", love: "ปรับตัวเข้าหากัน", advice: "ทำทีละนิดแต่สม่ำเสมอ" },
+            16: { name: "The Devil (ปีศาจ)", work: "ระวังงานที่ผูกมัด/คน toxic", money: "หนี้/ผ่อน/ใช้เพลิน", love: "ยึดติด หึงหวง", advice: "ตัดวงจรที่ทำให้เสียอิสระ" },
+            17: { name: "The Tower (หอคอย)", work: "แผนเดิมพังเพื่อให้เห็นความจริง ต้องแก้ด่วน", money: "มีเหตุให้จ่ายฉุกเฉิน", love: "ความจริงเปิดเผย", advice: "ยอมรับ แล้วสร้างใหม่ให้แข็งแรงกว่าเดิม" },
+            18: { name: "The Star (ดวงดาว)", work: "ฟื้นตัว มีแรงบันดาลใจ งานค่อย ๆ ดี", money: "ดีขึ้นแบบค่อยเป็นค่อยไป", love: "เยียวยาและหวังได้", advice: "เชื่อในทางของตัวเอง" },
+            19: { name: "The Moon (พระจันทร์)", work: "ข้อมูลไม่ชัด ระวังสื่อสารผิด", money: "อย่าลงทุนตามข่าวลือ", love: "คิดมาก/ไม่มั่นใจ", advice: "เช็คความจริงก่อนสรุป" },
+            20: { name: "The Sun (พระอาทิตย์)", work: "สำเร็จ ชัดเจน เหมาะกับเปิดตัว/ประกาศ", money: "รายรับดี ข่าวดีเรื่องเงิน", love: "สดใส เปิดเผย", advice: "ใช้พลังบวกผลักดันต่อ" },
+            21: { name: "Judgement (การพิพากษา)", work: "สรุปผล ตัดสินใจครั้งใหญ่ ปิดงานค้าง", money: "เคลียร์เรื่องเงินค้าง/ภาษี/หนี้", love: "ตัดสินใจสถานะ", advice: "รับบทเรียนแล้วไปต่อ" },
+            22: { name: "The World (โลก)", work: "สำเร็จครบวงจร ก้าวสู่ระดับใหม่", money: "ผลตอบแทนระยะยาว", love: "ลงตัว/ไปต่อได้ไกล", advice: "ฉลองได้ แต่เตรียมเป้าหมายถัดไป" },
+        };
+
+        const suitName = {
+            Wands: "ไม้เท้า", Cups: "ถ้วย", Swords: "ดาบ", Pentacles: "เหรียญ"
+        };
+        const suitTone = {
+            Wands: { work: "งาน/โปรเจกต์/แรงบันดาลใจ", money: "รายได้จากการลุยและโอกาส", love: "ไฟและความตื่นเต้น", advice: "ลงมือและคุมจังหวะ" },
+            Cups: { work: "งานที่เกี่ยวกับคน/ความรู้สึก", money: "เงินสัมพันธ์กับความพอใจ", love: "หัวใจและความสัมพันธ์", advice: "ฟังใจและสื่อสาร" },
+            Swords: { work: "การตัดสินใจ/เหตุผล/ปัญหา", money: "เงินต้องชัด โปร่งใส", love: "คุยความจริง ตั้งขอบเขต", advice: "ใช้สติ ตรวจสอบ" },
+            Pentacles: { work: "งานจริงจัง/ทักษะ/ความมั่นคง", money: "การเงิน-ทรัพย์สิน", love: "ความมั่นคงระยะยาว", advice: "ทำช้าแต่ชัวร์" },
+        };
+
+        function minorMeta(id1) {
+            const idx = id1 - 23; // 0..55
+            const suits = ["Wands", "Cups", "Swords", "Pentacles"];
+            const suit = suits[Math.floor(idx / 14)];
+            const r = idx % 14; // 0..13
+            const ranks = ["Ace", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Page", "Knight", "Queen", "King"];
+            const rank = ranks[r];
+
+            const rankMeaning = {
+                Ace: { work: "เริ่มต้นแรง", money: "โอกาสใหม่", love: "เปิดใจใหม่", advice: "เริ่มเลย" },
+                Two: { work: "วางแผน/เลือกทาง", money: "บาลานซ์", love: "ตกลงกัน", advice: "เลือกให้ชัด" },
+                Three: { work: "ขยายผล", money: "เริ่มเห็นผล", love: "พัฒนา", advice: "ไปต่อ" },
+                Four: { work: "มั่นคง/ฉลอง", money: "นิ่งขึ้น", love: "อบอุ่น", advice: "รักษาสมดุล" },
+                Five: { work: "ขัดแย้ง/แข่ง", money: "สะดุดเล็กน้อย", love: "งอน/ปะทะ", advice: "คุยให้เคลียร์" },
+                Six: { work: "สำเร็จ/ยอมรับ", money: "เงินเข้า", love: "สัมพันธ์ดี", advice: "รับเครดิตอย่างถ่อมตัว" },
+                Seven: { work: "ยืนหยัด", money: "ต้องป้องกัน", love: "ต้องชัดเจน", advice: "ตั้งขอบเขต" },
+                Eight: { work: "เร็ว/เร่ง", money: "หมุนไว", love: "คืบเร็ว", advice: "คุมสปีด" },
+                Nine: { work: "ใกล้เสร็จ/เหนื่อย", money: "ระวังรั่วไหล", love: "ระวังความอ่อนไหว", advice: "พักแล้วไปต่อ" },
+                Ten: { work: "ภาระหนัก", money: "ภาระการเงิน", love: "แบกมากไป", advice: "ลดภาระ" },
+                Page: { work: "เริ่มเรียนรู้", money: "เริ่มสะสม", love: "ข้อความ/คนใหม่", advice: "ลองแบบเบา ๆ" },
+                Knight: { work: "ลุย", money: "ตัดสินใจไว", love: "รุก/ชวน", advice: "อย่าหุนหัน" },
+                Queen: { work: "คุมงานนุ่มนวล", money: "บริหารดี", love: "ดูแลกัน", advice: "ใช้ความเข้าใจ" },
+                King: { work: "ผู้นำ", money: "วางระบบเงิน", love: "มั่นคง", advice: "ตัดสินใจอย่างมีวุฒิภาวะ" },
+            }[rank];
+
+            const tone = suitTone[suit];
+
+            return {
+                name: `${rank} of ${suit} (${suitName[suit]})`,
+                work: `${tone.work}: ${rankMeaning.work}`,
+                money: `${tone.money}: ${rankMeaning.money}`,
+                love: `${tone.love}: ${rankMeaning.love}`,
+                advice: `${tone.advice}: ${rankMeaning.advice}`,
+            };
+        }
+
+        function getTarotMeta(id1) {
+            if (id1 <= 22) {
+                const m = major[id1];
+                return { name: m.name, work: m.work, money: m.money, love: m.love, advice: m.advice };
+            }
+            return minorMeta(id1);
+        }
+
+        // --------------------------
+        // Texture paths (.jpeg)
+        // --------------------------
+        function frontPathByCardIndex(id1) {
+            return `./assets/fronts/${String(id1).padStart(2, "0")}.jpeg`;
+        }
+
+        // --------------------------
+        // Three.js setup
+        // --------------------------
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(W(), H());
+        renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+        document.getElementById("app").appendChild(renderer.domElement);
+
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.Fog(0x0b0d12, 6, 18);
+
+        const camera3D = new THREE.PerspectiveCamera(45, W() / H(), 0.1, 100);
+
+        // Base camera (wide)
+        const camBasePos = new THREE.Vector3(0, 1.75, 8.6);
+        const camBaseLook = new THREE.Vector3(0, 1.05, 0);
+
+        // Cinematic camera (zoom in for selected)
+        const camCinePos = new THREE.Vector3(0, 1.52, 4.55);
+        const camCineLook = new THREE.Vector3(0, 1.22, 1.65);
+
+        camera3D.position.copy(camBasePos);
+        camera3D.lookAt(camBaseLook);
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+        const dir = new THREE.DirectionalLight(0xffffff, 1.0);
+        dir.position.set(3, 6, 4);
+        scene.add(dir);
+
+        const ground = new THREE.Mesh(
+            new THREE.PlaneGeometry(40, 40),
+            new THREE.MeshStandardMaterial({ color: 0x0b0d12, roughness: 1, metalness: 0 })
+        );
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -2.2;
+        scene.add(ground);
+
+        // --------------------------
+        // Textures
+        // --------------------------
+        const texLoader = new THREE.TextureLoader();
+        function makeTex(url) {
+            const t = texLoader.load(url);
+            t.colorSpace = THREE.SRGBColorSpace;
+            t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+            return t;
+        }
+        const backTex = makeTex("./assets/back.jpeg);
+        function loadFrontTex(id1) { return makeTex(frontPathByCardIndex(id1)); }
+
+        // --------------------------
+        // Cards
+        // --------------------------
+        const cards = [];
+        const pickables = [];
+        let deckOrder = [];
+        let dealtIds = [];
+
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+        }
+        function initDeck() {
+            deckOrder = Array.from({ length: FRONT_COUNT }, (_, i) => i + 1);
+            shuffleArray(deckOrder);
+            dealtIds = deckOrder.slice(0, DISPLAY_N);
+        }
+
+        function clearCards() {
+            for (const c of cards) scene.remove(c);
+            cards.length = 0;
+            pickables.length = 0;
+        }
+
+        function createCard(slotIndex, id1) {
+            const group = new THREE.Group();
+            const planeGeo = new THREE.PlaneGeometry(cardW, cardH);
+
+            const frontMat = new THREE.MeshStandardMaterial({ map: loadFrontTex(id1), roughness: 0.95, metalness: 0.0 });
+            const backMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.95, metalness: 0.0 });
+
+            const front = new THREE.Mesh(planeGeo, frontMat);
+            front.position.z = 0.026;
+
+            const back = new THREE.Mesh(planeGeo, backMat);
+            back.rotation.y = Math.PI;
+            back.position.z = -0.026;
+
+            const edge = new THREE.Mesh(
+                new THREE.BoxGeometry(cardW, cardH, 0.04),
+                new THREE.MeshStandardMaterial({ color: 0x111522, roughness: 1, metalness: 0 })
+            );
+
+            group.add(edge, front, back);
+
+            group.userData.slot = slotIndex;
+            group.userData.cardId1 = id1;
+            group.userData.meta = getTarotMeta(id1);
+            group.userData.isSelected = false;
+            group.userData.pickMeshes = [front, back];
+
+            group.userData.centerT = 0;
+            group.userData.flipT = 0;
+
+            return group;
+        }
+
+        function dealVisible() {
+            clearCards();
+            for (let i = 0; i < DISPLAY_N; i++) {
+                const id1 = dealtIds[i];
+                const c = createCard(i, id1);
+                scene.add(c);
+                cards.push(c);
+                pickables.push(...c.userData.pickMeshes);
+            }
+        }
+
+        initDeck();
+        dealVisible();
+
+        // --------------------------
+        // Layout modes
+        // --------------------------
+        let layoutMode = "ring"; // ring | fan
+        let rotationT = 0;
+
+        function computeFanSpacing() {
+            const desiredWidthWorld = 6.8;
+            const spacing = desiredWidthWorld / Math.max(1, DISPLAY_N - 1);
+            return THREE.MathUtils.clamp(spacing, 0.35, 0.70);
+        }
+
+        function desiredPose(card) {
+            const i = card.userData.slot;
+
+            if (layoutMode === "fan") {
+                const spacing = computeFanSpacing();
+                const center = (DISPLAY_N - 1) / 2;
+                const x = (i - center) * spacing;
+                const y = FAN_Y;
+                const z = FAN_Z;
+                return { x, y, z, mode: "fan" };
+            }
+
+            const baseAngle = (i / DISPLAY_N) * Math.PI * 2;
+            const angle = baseAngle + rotationT;
+            const x = Math.cos(angle) * RING_RADIUS;
+            const z = Math.sin(angle) * RING_RADIUS;
+            const y = RING_Y;
+            return { x, y, z, mode: "ring" };
+        }
+
+        // Fan: เลือกใบที่อยู่กลางสุด (แม่นมาก)
+        function getFanNearestCard() {
+            let best = null;
+            let bestAbs = Infinity;
+            for (const c of cards) {
+                if (!c.visible || c.userData.isSelected) continue;
+                const ax = Math.abs(c.position.x);
+                if (ax < bestAbs) { bestAbs = ax; best = c; }
+            }
+            return best;
+        }
+
+        // --------------------------
+        // Picking & drag
+        // --------------------------
+        const raycaster = new THREE.Raycaster();
+        const ndc = new THREE.Vector2(0, 0);
+        const planeHit = new THREE.Vector3();
+        const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -2.2);
+
+        let hoverCard = null;
+        let grabbedCard = null;
+        let grabbedOffset = new THREE.Vector3();
+
+        let selectedCard = null;
+        let allowPick = true;
+        let freezeOthers = false;
+
+        // --------------------------
+        // Cursor / gestures
+        // --------------------------
+        let cursorX = 0, cursorY = 0;
+        let cursorValid = false;
+
+        let pinch = false, pinchEdgeOn = false, pinchEdgeOff = false;
+        let openHold = 0;
+        let lastHandX = null;
+        let shakeEnergy = 0;
+
+        function setCursorFromLandmark(normX, normY) {
+            const x = 1 - normX; // mirror
+            const y = normY;
+            const nx = (x * 2) - 1;
+            const ny = -((y * 2) - 1);
+
+            const a = 0.22;
+            cursorX = cursorX + (nx - cursorX) * a;
+            cursorY = cursorY + (ny - cursorY) * a;
+
+            ndc.set(cursorX, cursorY);
+            cursorValid = true;
+
+            const px = ((cursorX + 1) * 0.5) * W();
+            const py = ((-cursorY + 1) * 0.5) * H();
+            reticle.style.left = `${px}px`;
+            reticle.style.top = `${py}px`;
+            reticle.style.display = "block";
+        }
+
+        function updatePinch(lm) {
+            const thumb = lm[4], index = lm[8];
+            const dist = Math.hypot(thumb.x - index.x, thumb.y - index.y);
+
+            pinchEdgeOn = false; pinchEdgeOff = false;
+            if (!pinch && dist < PINCH_ON) { pinch = true; pinchEdgeOn = true; }
+            else if (pinch && dist > PINCH_OFF) { pinch = false; pinchEdgeOff = true; }
+            return dist;
+        }
+
+        function isOpenPalm(lm) {
+            const idx = lm[8].y < lm[6].y;
+            const mid = lm[12].y < lm[10].y;
+            const ring = lm[16].y < lm[14].y;
+            const pin = lm[20].y < lm[18].y;
+            return [idx, mid, ring, pin].filter(Boolean).length >= 3;
+        }
+        function isFist(lm) {
+            const idx = lm[8].y > lm[6].y;
+            const mid = lm[12].y > lm[10].y;
+            const ring = lm[16].y > lm[14].y;
+            const pin = lm[20].y > lm[18].y;
+            return [idx, mid, ring, pin].filter(Boolean).length >= 3;
+        }
+        function isPoint(lm) {
+            const indexUp = lm[8].y < lm[6].y;
+            const midDown = lm[12].y > lm[10].y;
+            const ringDown = lm[16].y > lm[14].y;
+            const pinkDown = lm[20].y > lm[18].y;
+            return indexUp && ((midDown ? 1 : 0) + (ringDown ? 1 : 0) + (pinkDown ? 1 : 0) >= 2);
+        }
+
+        function computeHover() {
+            if (!cursorValid || grabbedCard || !allowPick) return;
+
+            // Fan mode: "กลางจอ" คือใบที่เลือก (แม่นกว่า raycast)
+            if (layoutMode === "fan") {
+                hoverCard = getFanNearestCard();
+                // highlight
+                for (const c of cards) {
+                    if (c.userData.isSelected) continue;
+                    const isHover = (hoverCard === c);
+                    const target = isHover ? 1.08 : 1.0;
+                    c.scale.lerp(new THREE.Vector3(target, target, target), 0.18);
+
+                    // ยกใบที่เล็งขึ้นนิด
+                    const d = desiredPose(c);
+                    const dy = isHover ? 0.18 : 0.0;
+                    c.position.y += ((d.y + dy) - c.position.y) * 0.12;
+                }
+                return;
+            }
+
+            // Ring mode: raycast ตาม reticle
+            raycaster.setFromCamera(ndc, camera3D);
+            const hits = raycaster.intersectObjects(pickables, false);
+
+            let found = null;
+            for (const h of hits) {
+                const g = h.object.parent;
+                if (g && !g.userData.isSelected) { found = g; break; }
+            }
+            hoverCard = found;
+
+            for (const c of cards) {
+                if (c.userData.isSelected) continue;
+                const target = (hoverCard === c) ? 1.07 : 1.0;
+                c.scale.lerp(new THREE.Vector3(target, target, target), 0.16);
+            }
+        }
+
+        function beginGrab() {
+            if (!hoverCard || hoverCard.userData.isSelected || !allowPick) return;
+            grabbedCard = hoverCard;
+
+            raycaster.setFromCamera(ndc, camera3D);
+            raycaster.ray.intersectPlane(dragPlane, planeHit);
+            grabbedOffset.copy(grabbedCard.position).sub(planeHit);
+
+            grabbedCard.position.z = 2.2;
+        }
+
+        function dragGrabbed() {
+            if (!grabbedCard || !cursorValid) return;
+
+            raycaster.setFromCamera(ndc, camera3D);
+            raycaster.ray.intersectPlane(dragPlane, planeHit);
+
+            grabbedCard.position.copy(planeHit).add(grabbedOffset);
+            grabbedCard.position.y = 1.15;
+            grabbedCard.scale.lerp(new THREE.Vector3(1.12, 1.12, 1.12), 0.22);
+
+            // Fan mode: กันแอบดูหน้าไพ่
+            if (layoutMode === "fan") {
+                grabbedCard.rotation.x += (0 - grabbedCard.rotation.x) * 0.20;
+                grabbedCard.rotation.z += (0 - grabbedCard.rotation.z) * 0.20;
+                grabbedCard.rotation.y += (Math.PI - grabbedCard.rotation.y) * 0.22;
+            }
+        }
+
+        function isInCenterZone() {
+            const rect = centerZoneEl.getBoundingClientRect();
+            const px = ((cursorX + 1) * 0.5) * W();
+            const py = ((-cursorY + 1) * 0.5) * H();
+            return px > rect.left && px < rect.right && py > rect.top && py < rect.bottom;
+        }
+
+        function showReading(card) {
+            const meta = card.userData.meta;
+            readingTitle.textContent = meta?.name ?? `Card #${card.userData.cardId1}`;
+            readingMeaning.innerHTML = `
+        <div style="display:grid;gap:10px;margin-top:6px;">
+          <div><b>งาน</b>: ${meta.work ?? "-"}</div>
+          <div><b>เงิน</b>: ${meta.money ?? "-"}</div>
+          <div><b>ความรัก</b>: ${meta.love ?? "-"}</div>
+          <div><b>คำแนะนำ</b>: ${meta.advice ?? "-"}</div>
+        </div>
+      `;
+            readingBox.style.display = "block";
+        }
+        function hideReading() {
+            readingBox.style.display = "none";
+        }
+
+        function selectCard(card) {
+            card.userData.isSelected = true;
+            card.userData.centerT = 0;
+            card.userData.flipT = 0;
+
+            // start back-facing then flip to front
+            card.rotation.set(0, Math.PI, 0);
+
+            selectedCard = card;
+            allowPick = false;
+            freezeOthers = true;
+
+            // hide other cards (cinematic)
+            for (const c of cards) {
+                if (c !== card) c.visible = false;
+            }
+
+            // hide center zone during reading
+            centerZoneEl.classList.add("hide");
+
+            // add to history (newest on top)
+            pickedHistory.unshift({
+                id1: card.userData.cardId1,
+                name: card.userData.meta?.name ?? `Card #${card.userData.cardId1}`,
+            });
+            while (pickedHistory.length > 5) pickedHistory.pop();
+            renderPickedHistory();
+
+            showReading(card);
+        }
+
+        function resetAfterReading() {
+            hideReading();
+
+            if (selectedCard) {
+                selectedCard.userData.isSelected = false;
+                selectedCard.scale.set(1, 1, 1);
+                selectedCard.userData.centerT = 0;
+                selectedCard.userData.flipT = 0;
+                selectedCard.visible = true;
+                selectedCard = null;
+            }
+
+            for (const c of cards) c.visible = true;
+
+            allowPick = true;
+            freezeOthers = false;
+
+            layoutMode = "ring";
+            centerZoneEl.classList.remove("hide");
+        }
+
+        function endGrab() {
+            if (!grabbedCard) return;
+
+            if (layoutMode === "ring") {
+                if (isInCenterZone()) selectCard(grabbedCard);
+            } else {
+                // fan: select if cursor near center
+                const px = ((cursorX + 1) * 0.5) * W();
+                const py = ((-cursorY + 1) * 0.5) * H();
+                const cx = W() / 2, cy = H() / 2;
+                const d = Math.hypot(px - cx, py - cy);
+                if (d < 120) selectCard(grabbedCard);
+            }
+
+            grabbedCard.scale.set(1, 1, 1);
+            grabbedCard = null;
+            hoverCard = null;
+        }
+
+        function shuffleDeck() {
+            if (selectedCard) return;
+            shuffleArray(deckOrder);
+            dealtIds = deckOrder.slice(0, DISPLAY_N);
+            dealVisible();
+            rotationT += (Math.random() * 2 - 1) * 1.8;
+        }
+
+        // --------------------------
+        // Camera cinematic
+        // --------------------------
+        let cineT = 0; // 0=base, 1=cinematic
+        function updateCamera() {
+            const target = (selectedCard ? 1 : 0);
+            cineT += (target - cineT) * 0.08;
+            const t = cineT * cineT * (3 - 2 * cineT);
+
+            const pos = camBasePos.clone().lerp(camCinePos, t);
+            const look = camBaseLook.clone().lerp(camCineLook, t);
+
+            camera3D.position.lerp(pos, 0.18);
+            camera3D.lookAt(look);
+        }
+
+        // --------------------------
+        // Animation loop
+        // --------------------------
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (!freezeOthers && layoutMode === "ring" && !grabbedCard && allowPick) {
+                rotationT += 0.006;
+            }
+
+            aimGuideEl.style.display = (layoutMode === "fan" && allowPick && !selectedCard) ? "block" : "none";
+            centerZoneEl.style.opacity = (layoutMode === "ring" && allowPick && !selectedCard) ? "1" : "0";
+
+            for (const c of cards) {
+                if (!c.visible) continue;
+                if (c === grabbedCard) continue;
+                if (c.userData.isSelected) continue;
+
+                const d = desiredPose(c);
+                c.position.x += (d.x - c.position.x) * 0.12;
+                c.position.y += (d.y - c.position.y) * 0.12;
+                c.position.z += (d.z - c.position.z) * 0.12;
+
+                if (d.mode === "ring") {
+                    const center = new THREE.Vector3(0, RING_Y, 0);
+                    c.lookAt(center);
+                } else {
+                    // Fan mode: show BACK always
+                    c.rotation.x += (0 - c.rotation.x) * 0.14;
+                    c.rotation.z += (0 - c.rotation.z) * 0.14;
+                    c.rotation.y += (Math.PI - c.rotation.y) * 0.14;
+                }
+            }
+
+            computeHover();
+            dragGrabbed();
+
+            // selected: move to center + flip to front
+            for (const c of cards) {
+                if (!c.userData.isSelected) continue;
+
+                c.userData.centerT = Math.min(1, (c.userData.centerT ?? 0) + 0.03);
+                const tt = c.userData.centerT;
+                const ease = tt * tt * (3 - 2 * tt);
+
+                c.position.lerp(CENTER_POS, ease);
+                // ลดขนาดให้พอดีหน้าจอ
+                c.scale.lerp(new THREE.Vector3(1.08, 1.08, 1.08), 0.10);
+
+                c.rotation.x += (0 - c.rotation.x) * 0.18;
+                c.rotation.z += (0 - c.rotation.z) * 0.18;
+
+                c.userData.flipT = Math.min(1, (c.userData.flipT ?? 0) + 0.022);
+                const ft = c.userData.flipT;
+                const fe = ft * ft * (3 - 2 * ft);
+                c.rotation.y = Math.PI * (1 - fe);
+            }
+
+            updateCamera();
+            renderer.render(scene, camera3D);
+        }
+
+        window.addEventListener("resize", () => {
+            camera3D.aspect = W() / H();
+            camera3D.updateProjectionMatrix();
+            renderer.setSize(W(), H());
+        });
+
+        // --------------------------
+        // MediaPipe Hands
+        // --------------------------
+        const hands = new Hands({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${file}`,
+        });
+
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.65,
+            minTrackingConfidence: 0.6,
+        });
+
+        hands.onResults((res) => {
+            cursorValid = false;
+            reticle.style.display = "none";
+
+            if (res.multiHandLandmarks && res.multiHandLandmarks.length) {
+                const lm = res.multiHandLandmarks[0];
+
+                setCursorFromLandmark(lm[8].x, lm[8].y);
+
+                const dist = updatePinch(lm);
+                const openPalm = isOpenPalm(lm);
+                const fist = isFist(lm);
+                const pointing = isPoint(lm);
+
+                // open palm hold (close reading)
+                if (openPalm) openHold += 1 / 60;
+                else openHold = Math.max(0, openHold - 2 / 60);
+
+                if (selectedCard && openHold > OPEN_HOLD_TO_CLOSE) {
+                    resetAfterReading();
+                    openHold = 0;
+                }
+
+                // mode switch
+                if (!selectedCard && allowPick && !grabbedCard) {
+                    if (openPalm) layoutMode = "fan";
+                    else layoutMode = "ring";
+                }
+
+                // shuffle detection: fist + shake
+                const hx = lm[0].x;
+                if (lastHandX !== null) {
+                    const dx = Math.abs(hx - lastHandX);
+                    if (fist && allowPick && !grabbedCard && !selectedCard) {
+                        shakeEnergy += dx * 10;
+                        shakeEnergy *= 0.92;
+                    } else {
+                        shakeEnergy *= 0.85;
+                    }
+                }
+                lastHandX = hx;
+
+                if (shakeEnergy > SHAKE_TRIGGER && fist && allowPick && !grabbedCard && !selectedCard) {
+                    shuffleDeck();
+                    shakeEnergy = 0;
+                }
+
+                // Fan mode: pointing hold to select (no pinch)
+                if (!selectedCard && allowPick && layoutMode === "fan" && pointing && hoverCard && !grabbedCard) {
+                    pointHold += 1 / 60;
+                    if (pointHold > POINT_SELECT_HOLD) {
+                        selectCard(hoverCard);
+                        pointHold = 0;
+                    }
+                } else {
+                    pointHold = Math.max(0, pointHold - 2 / 60);
+                }
+
+                // grab / release
+                if (pinchEdgeOn && !grabbedCard && allowPick) beginGrab();
+                if (pinchEdgeOff && grabbedCard) endGrab();
+
+                hud.textContent =
+                    `hand: OK | mode:${layoutMode} | pinch:${pinch ? "ON" : "OFF"} (${dist.toFixed(3)})`
+                    + (hoverCard ? ` | hover:#${String(hoverCard.userData.cardId1).padStart(2, "0")}` : "")
+                    + (grabbedCard ? ` | grabbing:#${String(grabbedCard.userData.cardId1).padStart(2, "0")}` : "")
+                    + (selectedCard ? ` | selected:#${String(selectedCard.userData.cardId1).padStart(2, "0")}` : "")
+                    + (openPalm ? " | open" : "")
+                    + (pointing ? " | point" : "")
+                    + (fist ? " | fist" : "");
+
+            } else {
+                hud.textContent = "hand: not found (bring your hand into frame)";
+            }
+        });
+
+        // --------------------------
+        // Camera start loop
+        // --------------------------
+        async function startCamera() {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: 640, height: 480, facingMode: "user" },
+                audio: false
+            });
+            videoEl.srcObject = stream;
+
+            await new Promise((resolve) => {
+                videoEl.onloadedmetadata = () => resolve();
+            });
+            await videoEl.play();
+
+            async function loop() {
+                await hands.send({ image: videoEl });
+                requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        try {
+            await startCamera();
+            hud.textContent = "camera: started | show your hand";
+            animate();
+        } catch (e) {
+            hud.textContent = "camera error: " + e.message;
+            console.error(e);
+            alert("Camera error: " + e.message);
+        }
+    </script>
+
+</body>
+
+</html>
+<!-- PART 2/2 END -->
