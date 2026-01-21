@@ -1012,6 +1012,25 @@
                 zone.title = pos.description;
                 zone.innerHTML = `<div class="spread-zone-label">${pos.id}. ${pos.name}</div>`;
                 zone.style.cursor = "pointer";
+                
+                // Add click handler
+                zone.addEventListener("click", () => {
+                    placeCardInSpread(pos.id);
+                });
+                
+                // Add hover effect with description
+                zone.addEventListener("mouseenter", () => {
+                    if (!zone.classList.contains("filled")) {
+                        zone.style.background = "rgba(0, 255, 200, 0.15)";
+                    }
+                });
+                
+                zone.addEventListener("mouseleave", () => {
+                    if (!zone.classList.contains("filled")) {
+                        zone.style.background = "rgba(255, 255, 255, 0.02)";
+                    }
+                });
+                
                 spreadZones.appendChild(zone);
                 
                 spreadCards.push({
@@ -1097,6 +1116,14 @@
             // start back-facing then flip to front
             card.rotation.set(0, Math.PI, 0);
 
+            // In spread mode, show a placeholder and highlight dropzones
+            if (spreadMode) {
+                selectedCard = card;
+                hud.textContent = `📍 Click a position to place "${card.userData.meta.name}" in the spread`;
+                spreadZones.classList.add("active");
+                return;
+            }
+
             selectedCard = card;
             allowPick = false;
             freezeOthers = true;
@@ -1110,6 +1137,38 @@
 
             addToHistory(card);
             showReading(card);
+        }
+
+        function placeCardInSpread(posId) {
+            if (!selectedCard || !spreadMode) return;
+
+            // Find the spread slot
+            const spreadSlot = spreadCards.find(s => s.posId === posId);
+            if (!spreadSlot) return;
+
+            // Place card
+            spreadSlot.cardId = selectedCard.userData.cardId0;
+            spreadSlot.cardName = selectedCard.userData.meta.name;
+
+            // Update visual
+            const imgUrl = frontPathByCardIndex(spreadSlot.cardId);
+            spreadSlot.element.innerHTML = `
+                <div class="spread-zone-card" style="background-image: url('${imgUrl}')"></div>
+                <div class="spread-zone-label">${posId}. ${SPREAD_7_POSITIONS[posId-1].name}</div>
+            `;
+            spreadSlot.element.classList.add("filled");
+
+            // Reset selection
+            selectedCard.userData.isSelected = false;
+            selectedCard = null;
+            spreadZones.classList.remove("active");
+
+            updateSpreadDisplay();
+            
+            // If all 7 cards placed, show completion message
+            if (spreadCards.filter(s => s.cardId !== null).length === 7) {
+                hud.textContent = `✅ 7-Card Spread Complete! Press R to view full reading`;
+            }
         }
 
         function resetAfterReading() {
@@ -1250,6 +1309,43 @@
             renderer.render(scene, camera3D);
         }
 
+        function displayFullSpreadReading() {
+            if (!spreadMode) return;
+            
+            const placedCards = spreadCards.filter(s => s.cardId !== null);
+            if (placedCards.length === 0) {
+                hud.textContent = "❌ No cards placed yet";
+                return;
+            }
+
+            readingTitle.textContent = "7-Card Spread Reading";
+            readingContent.innerHTML = "";
+
+            placedCards.forEach((slot) => {
+                const pos = SPREAD_7_POSITIONS[slot.posId - 1];
+                const card = cards.find(c => c.userData.cardId0 === slot.cardId);
+                if (!card) return;
+
+                const meaning = card.userData.meta.meaning;
+                const categoryHtml = `
+                    <div class="reading-category">
+                        <div style="font-weight: 700; color: #ffd700; margin-bottom: 6px;">Position ${pos.id}: ${pos.name}</div>
+                        <div class="reading-cat-text">${pos.description}</div>
+                        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">
+                            <div style="font-size: 12px; color: rgba(0, 255, 200, 0.8); font-weight: 700;">${slot.cardName}</div>
+                            <div style="font-size: 11px; line-height: 1.3; margin-top: 4px;">
+                                <strong>Love:</strong> ${meaning.love}<br>
+                                <strong>Work:</strong> ${meaning.work}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                readingContent.innerHTML += categoryHtml;
+            });
+
+            readingBox.style.display = "block";
+        }
+
         // Keyboard shortcuts
         document.addEventListener("keydown", (e) => {
             if (e.key === "7" || e.key === "s") {
@@ -1257,10 +1353,15 @@
                 if (!spreadMode) {
                     enterSpreadMode();
                 }
+            } else if (e.key === "r" || e.key === "R") {
+                // Press R to view full spread reading
+                displayFullSpreadReading();
             } else if (e.key === "Escape") {
                 // Escape to exit spread mode
                 if (spreadMode) {
                     exitSpreadMode();
+                } else {
+                    hideReading();
                 }
             }
         });
