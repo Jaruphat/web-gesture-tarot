@@ -254,6 +254,105 @@
             font-size: 11px;
             color: rgba(255, 255, 255, .4);
         }
+
+        /* 7-Card Spread UI */
+        #spreadContainer {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            z-index: 50;
+            background: rgba(10, 12, 18, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 16px;
+            backdrop-filter: blur(10px);
+            width: min(600px, calc(100vw - 40px));
+        }
+
+        #spreadTitle {
+            color: #ffd700;
+            font-size: 14px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .spread-zones {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .spread-zone {
+            width: 70px;
+            height: 100px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.02);
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .spread-zone:hover {
+            border-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 12px rgba(0, 255, 200, 0.3);
+        }
+
+        .spread-zone.filled {
+            border-color: #00ffc8;
+            background: rgba(0, 255, 200, 0.1);
+            box-shadow: 0 0 8px rgba(0, 255, 200, 0.2);
+        }
+
+        .spread-zone-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+
+        .spread-zone-card {
+            width: 60px;
+            height: 90px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+        }
+
+        #spreadModeBtn {
+            margin-top: 12px;
+            padding: 8px 16px;
+            background: rgba(0, 255, 200, 0.2);
+            border: 1px solid rgba(0, 255, 200, 0.5);
+            color: #00ffc8;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #spreadModeBtn:hover {
+            background: rgba(0, 255, 200, 0.4);
+            box-shadow: 0 0 12px rgba(0, 255, 200, 0.4);
+        }
     </style>
 </head>
 
@@ -282,6 +381,12 @@
         <div id="readingHint">Hold Open Palm ~1s or Click to Close</div>
     </div>
 
+    <div id="spreadContainer">
+        <div id="spreadTitle">7-Card Spread - Select Positions</div>
+        <div class="spread-zones" id="spreadZones"></div>
+        <button id="spreadModeBtn">Exit Spread Mode</button>
+    </div>
+
     <video id="video" autoplay playsinline muted></video>
 
     <!-- MediaPipe Hands -->
@@ -301,6 +406,10 @@
         const readingBox = document.getElementById("readingBox");
         const readingTitle = document.getElementById("readingTitle");
         const readingContent = document.getElementById("readingContent");
+
+        const spreadContainer = document.getElementById("spreadContainer");
+        const spreadZones = document.getElementById("spreadZones");
+        const spreadModeBtn = document.getElementById("spreadModeBtn");
 
         const historyList = document.getElementById("historyList");
         const clearHistoryBtn = document.getElementById("clearHistoryBtn");
@@ -336,6 +445,17 @@
         const SHAKE_TRIGGER = 0.65;
         const DRAG_DOWN_THRESHOLD = -0.4; // Slightly more drag down for Fan mode
         const RING_SELECT_DRAG_DIST = 0.8; // Reduced from 1.5 - less drag needed to pick
+
+        // 7-Card Spread Configuration
+        const SPREAD_7_POSITIONS = [
+            { id: 1, name: "Situation", description: "Current state" },
+            { id: 2, name: "Challenge", description: "Main obstacle" },
+            { id: 3, name: "Advice", description: "Guidance" },
+            { id: 4, name: "Near Future", description: "1-3 months" },
+            { id: 5, name: "External", description: "Outside factors" },
+            { id: 6, name: "Internal", description: "Your feelings" },
+            { id: 7, name: "Outcome", description: "Final result" }
+        ];
 
         // --------------------------
         // DATA (From CSV)
@@ -875,6 +995,57 @@
             readingBox.style.display = "none";
         }
 
+        // --------------------------
+        // 7-Card Spread Mode
+        // --------------------------
+        let spreadMode = false;
+        let spreadCards = [];
+
+        function initSpreadUI() {
+            spreadZones.innerHTML = "";
+            spreadCards = [];
+            
+            SPREAD_7_POSITIONS.forEach((pos) => {
+                const zone = document.createElement("div");
+                zone.className = "spread-zone";
+                zone.id = `spread-pos-${pos.id}`;
+                zone.title = pos.description;
+                zone.innerHTML = `<div class="spread-zone-label">${pos.id}. ${pos.name}</div>`;
+                zone.style.cursor = "pointer";
+                spreadZones.appendChild(zone);
+                
+                spreadCards.push({
+                    posId: pos.id,
+                    cardId: null,
+                    element: zone
+                });
+            });
+        }
+
+        function enterSpreadMode() {
+            spreadMode = true;
+            initSpreadUI();
+            spreadContainer.style.display = "block";
+            hideReading();
+            hud.textContent = "📍 Select card, then tap position to place it. #/7 cards placed.";
+        }
+
+        function exitSpreadMode() {
+            spreadMode = false;
+            spreadContainer.style.display = "none";
+            spreadCards = [];
+            hud.textContent = "Ready";
+        }
+
+        function updateSpreadDisplay() {
+            const placedCount = spreadCards.filter(s => s.cardId !== null).length;
+            hud.textContent = `📍 7-Card Spread: ${placedCount}/7 cards placed`;
+            
+            if (placedCount === 7) {
+                hud.textContent = `✅ 7-Card Spread Complete! Click to view reading`;
+            }
+        }
+
         // History
         const historyData = [];
 
@@ -908,6 +1079,12 @@
         clearHistoryBtn.addEventListener("click", () => {
             historyData.length = 0;
             renderHistory();
+        });
+
+        spreadModeBtn.addEventListener("click", () => {
+            if (spreadMode) {
+                exitSpreadMode();
+            }
         });
 
         function selectCard(card) {
@@ -1072,6 +1249,21 @@
             updateCamera();
             renderer.render(scene, camera3D);
         }
+
+        // Keyboard shortcuts
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "7" || e.key === "s") {
+                // Press 7 or S to enter 7-card spread mode
+                if (!spreadMode) {
+                    enterSpreadMode();
+                }
+            } else if (e.key === "Escape") {
+                // Escape to exit spread mode
+                if (spreadMode) {
+                    exitSpreadMode();
+                }
+            }
+        });
 
         window.addEventListener("resize", () => {
             camera3D.aspect = W() / H();
