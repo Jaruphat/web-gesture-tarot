@@ -266,9 +266,9 @@
             background: rgba(10, 12, 18, 0.85);
             border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 12px;
-            padding: 16px;
+            padding: 18px 20px 22px;
             backdrop-filter: blur(10px);
-            width: min(600px, calc(100vw - 40px));
+            width: min(760px, calc(100vw - 32px));
         }
 
         #spreadTitle {
@@ -282,14 +282,17 @@
         }
 
         .spread-zones {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 20px 32px;
         }
 
         .spread-zone {
-            width: 70px;
-            height: 100px;
+            width: 120px;
+            height: 190px;
             border: 2px dashed rgba(255, 255, 255, 0.3);
             border-radius: 6px;
             display: flex;
@@ -324,14 +327,23 @@
         }
 
         .spread-zone-card {
-            width: 60px;
-            height: 90px;
+            width: 100px;
+            height: 150px;
             background-size: cover;
             background-position: center;
             border-radius: 4px;
             margin-bottom: 4px;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
         }
+
+        /* Horseshoe layout - position cards in semicircle */
+        .spread-zone:nth-child(1) { transform: translateY(60px) rotate(-25deg); }
+        .spread-zone:nth-child(2) { transform: translateY(40px) rotate(-15deg); }
+        .spread-zone:nth-child(3) { transform: translateY(20px) rotate(-8deg); }
+        .spread-zone:nth-child(4) { transform: translateY(0px) rotate(0deg); }
+        .spread-zone:nth-child(5) { transform: translateY(20px) rotate(8deg); }
+        .spread-zone:nth-child(6) { transform: translateY(40px) rotate(15deg); }
+        .spread-zone:nth-child(7) { transform: translateY(60px) rotate(25deg); }
 
         #spreadModeBtn {
             margin-top: 12px;
@@ -358,7 +370,7 @@
 
 <body>
     <div id="app"></div>
-    <div id="hud">Loading…</div>
+    <div id="hud">กำลังโหลด...</div>
 
     <div id="historyContainer">
         <div id="historyList"></div>
@@ -370,21 +382,21 @@
     <div id="reticle"></div>
 
     <div id="hint">
-        <b>Ring Mode:</b> Pinch to Pick & Drop in Center<br>
-        <b>Fan Mode:</b> Pinch & Drag Down to Select<br>
-        Open Palm = Fan Mode • Fist = Ring Mode • Shake = Shuffle
+        <b>โหมดวงกลม:</b> ใช้สองมือเพื่อหมุนสำรับและลากไพ่เข้าสู่จุดกลาง<br>
+        <b>โหมดพัด:</b> ยกมือเดียวแล้ว pinch ดึงไพ่ลงเพื่อเลือก<br>
+        กางสองมือหงายเข้าหากล้องเพื่อสับไพ่ ไพ่จะวิ่งจากมือซ้ายไปมือขวา
     </div>
 
     <div id="readingBox">
         <div id="readingTitle"></div>
         <div id="readingContent" class="reading-grid"></div>
-        <div id="readingHint">Hold Open Palm ~1s or Click to Close</div>
+        <div id="readingHint">กางมือค้าง ~1 วินาที หรือคลิกเพื่อปิดหน้าต่างคำทำนาย</div>
     </div>
 
     <div id="spreadContainer">
-        <div id="spreadTitle">7-Card Spread - Select Positions</div>
+        <div id="spreadTitle">ผัง 7 ใบรูปเกือกม้า (Horseshoe)</div>
         <div class="spread-zones" id="spreadZones"></div>
-        <button id="spreadModeBtn">Exit Spread Mode</button>
+        <button id="spreadModeBtn">ออกจากโหมด Horseshoe</button>
     </div>
 
     <video id="video" autoplay playsinline muted></video>
@@ -421,12 +433,12 @@
         // CONFIG
         // --------------------------
         const FRONT_COUNT = 78;
-        const DISPLAY_N = 28; // Increased from 18 - more cards to choose from
+        const DISPLAY_N = FRONT_COUNT;
         const cardW = 1.6;
         const cardH = 2.4;
 
         // Ring layout
-        const RING_RADIUS = 5.5;
+        const RING_RADIUS = 9;
         const RING_Y = 0.98;
 
         // Fan layout
@@ -442,19 +454,22 @@
 
         // Gesture thresholds
         const OPEN_HOLD_TO_CLOSE = 1.0;
-        const SHAKE_TRIGGER = 0.65;
         const DRAG_DOWN_THRESHOLD = -0.4; // Slightly more drag down for Fan mode
         const RING_SELECT_DRAG_DIST = 0.8; // Reduced from 1.5 - less drag needed to pick
+        const TWO_HAND_HOLD_FRAMES = 12;
+        const HAND_SHUFFLE_DURATION = 140;
+        const HAND_SHUFFLE_ARC = 0.45;
+        const HAND_SHUFFLE_Z = 2.4;
 
         // 7-Card Spread Configuration
         const SPREAD_7_POSITIONS = [
-            { id: 1, name: "Situation", description: "Current state" },
-            { id: 2, name: "Challenge", description: "Main obstacle" },
-            { id: 3, name: "Advice", description: "Guidance" },
-            { id: 4, name: "Near Future", description: "1-3 months" },
-            { id: 5, name: "External", description: "Outside factors" },
-            { id: 6, name: "Internal", description: "Your feelings" },
-            { id: 7, name: "Outcome", description: "Final result" }
+            { id: 1, name: "สถานการณ์ปัจจุบัน", name_en: "Situation", description: "พลังรวมทั้งหมดของเรื่องที่กำลังถามอยู่", description_en: "Current state" },
+            { id: 2, name: "อุปสรรคหลัก", name_en: "Challenge", description: "สิ่งที่ขวางอยู่หรือความท้าทายสำคัญ", description_en: "Main obstacle" },
+            { id: 3, name: "คำแนะนำ", name_en: "Advice", description: "แนวทางลงมือทำเพื่อให้เรื่องนี้ขยับต่อ", description_en: "Guidance" },
+            { id: 4, name: "อนาคตอันใกล้", name_en: "Near Future", description: "แนวโน้มช่วง 1-3 เดือนต่อจากนี้", description_en: "1-3 months" },
+            { id: 5, name: "ปัจจัยภายนอก", name_en: "External", description: "ผู้คนหรือสภาพแวดล้อมที่มีผลกับเรื่องนี้", description_en: "Outside factors" },
+            { id: 6, name: "ปัจจัยภายใน", name_en: "Internal", description: "ความรู้สึก ความคิด และแรงกระตุ้นภายใน", description_en: "Your feelings" },
+            { id: 7, name: "บทสรุป", name_en: "Outcome", description: "ผลลัพธ์รวมเมื่อเดินตามเส้นทางปัจจุบัน", description_en: "Final result" }
         ];
 
         // --------------------------
@@ -480,116 +495,72 @@
             "Page of Pentacles", "Knight of Pentacles", "Queen of Pentacles", "King of Pentacles"
         ];
 
+        const DEFAULT_MEANING = {
+            work: "ยังไม่มีคำทำนายการงานสำหรับไพ่ใบนี้",
+            money: "ยังไม่มีคำทำนายการเงินสำหรับไพ่ใบนี้",
+            love: "ยังไม่มีคำทำนายความรักสำหรับไพ่ใบนี้",
+            advice: "ใช้สัญชาตญาณและประสบการณ์ของคุณเป็นแนวทาง"
+        };
+
+        function mergeMeaning(src = {}) {
+            return {
+                work: src.work || DEFAULT_MEANING.work,
+                money: src.money || DEFAULT_MEANING.money,
+                love: src.love || DEFAULT_MEANING.love,
+                advice: src.advice || DEFAULT_MEANING.advice
+            };
+        }
+
+        function lookupTarotCard(id0) {
+            if (!tarotDb) return null;
+            if (id0 < 22 && Array.isArray(tarotDb.majorArcana)) {
+                return tarotDb.majorArcana.find((c) => c.id === id0) || null;
+            }
+            if (!tarotDb.minorArcana) return null;
+            for (const suit of ["wands", "cups", "swords", "pentacles"]) {
+                const list = tarotDb.minorArcana[suit];
+                if (!Array.isArray(list)) continue;
+                const found = list.find((c) => c.id === id0);
+                if (found) return found;
+            }
+            return null;
+        }
+
         let tarotDb = null;
 
         async function loadTarotDatabase() {
             if (tarotDb) return tarotDb;
-            try {
-                const res = await fetch('./tarot_meanings.json');
-                tarotDb = await res.json();
-                return tarotDb;
-            } catch (err) {
-                console.warn("Could not load tarot_meanings.json:", err);
-                return null;
+            const sources = ['./tarot_meanings_th.json', './tarot_meanings.json'];
+            for (const src of sources) {
+                try {
+                    const res = await fetch(src);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    tarotDb = await res.json();
+                    return tarotDb;
+                } catch (err) {
+                    console.warn(`Could not load ${src}:`, err);
+                }
             }
+            return null;
         }
 
         function getTarotMeta(id0) {
             const name = cardNames[id0] || `Card #${id0}`;
+            const cardData = lookupTarotCard(id0);
 
-            // Try to get from loaded database first
-            if (tarotDb) {
-                // Search in Major Arcana
-                if (id0 < 22) {
-                    const major = tarotDb.majorArcana[id0];
-                    if (major) {
-                        return {
-                            id: id0,
-                            name: major.name,
-                            meaning: {
-                                work: major.meanings.work || "เปลี่ยนแปลงในหน้าที่",
-                                money: major.meanings.money || "มีการเปลี่ยนแปลงทางการเงิน",
-                                love: major.meanings.love || "ความรักมีการเปลี่ยนแปลง",
-                                advice: major.meanings.advice || "เชื่อมั่นและลงมือทำ"
-                            }
-                        };
-                    }
-                }
-                // Search in Minor Arcana - Wands (22-35)
-                else if (id0 >= 22 && id0 < 36 && tarotDb.minorArcana.wands) {
-                    const card = tarotDb.minorArcana.wands[id0 - 22];
-                    if (card) {
-                        return {
-                            id: id0,
-                            name: card.name,
-                            meaning: {
-                                work: card.meanings.work || "งานศิลปะและสร้างสรรค์",
-                                money: "โอกาสทางการเงิน",
-                                love: "ความรักมีความสดใส",
-                                advice: card.meanings.upright || "เชื่อมั่นในความสามารถ"
-                            }
-                        };
-                    }
-                }
-                // Cups (36-49)
-                else if (id0 >= 36 && id0 < 50 && tarotDb.minorArcana.cups) {
-                    const card = tarotDb.minorArcana.cups[id0 - 36];
-                    if (card) {
-                        return {
-                            id: id0,
-                            name: card.name,
-                            meaning: {
-                                work: "ความสัมพันธ์ในทีมดี",
-                                money: "ความสุขมากกว่าความร่ำรวย",
-                                love: card.meanings.love || "ความรักลึกซึ้ง",
-                                advice: card.meanings.upright || "เปิดใจและรับความรัก"
-                            }
-                        };
-                    }
-                }
-                // Swords (50-63)
-                else if (id0 >= 50 && id0 < 64 && tarotDb.minorArcana.swords) {
-                    const card = tarotDb.minorArcana.swords[id0 - 50];
-                    if (card) {
-                        return {
-                            id: id0,
-                            name: card.name,
-                            meaning: {
-                                work: card.meanings.work || "ความคิดชัดเจนในการทำงาน",
-                                money: "ต้องคิดการแก้สมการหนี้",
-                                love: card.meanings.love || "มีการสื่อสาร",
-                                advice: card.meanings.upright || "สำคัญคิดให้ชัด"
-                            }
-                        };
-                    }
-                }
-                // Pentacles (64-77)
-                else if (id0 >= 64 && id0 <= 77 && tarotDb.minorArcana.pentacles) {
-                    const card = tarotDb.minorArcana.pentacles[id0 - 64];
-                    if (card) {
-                        return {
-                            id: id0,
-                            name: card.name,
-                            meaning: {
-                                work: card.meanings.work || "ความมั่นคง",
-                                money: card.meanings.money || "ความเป็นสุข",
-                                love: "ความรักเสถียร",
-                                advice: card.meanings.upright || "จงทำงานหนักต่อไป"
-                            }
-                        };
-                    }
-                }
+            if (cardData) {
+                return {
+                    id: cardData.id ?? id0,
+                    name: cardData.name || name,
+                    meaning: mergeMeaning(cardData.meanings)
+                };
             }
 
-            // Fallback to generic meanings
-            const meaning = {
-                work: "การเปลี่ยนแปลงและการเริ่มต้นใหม่ในทิศทางที่ดี",
-                money: "มีเกณฑ์ได้รับโชคหรือผลตอบแทนจากสิ่งที่ทำ",
-                love: "ความสัมพันธ์มีความเข้าใจและพัฒนาไปในทางบวก",
-                advice: "เชื่อมั่นในสัญชาตญาณและลงมือทำทันที"
+            return {
+                id: id0,
+                name,
+                meaning: mergeMeaning()
             };
-
-            return { id: id0, name, meaning };
         }
 
         // --------------------------
@@ -670,7 +641,7 @@
         // --------------------------
         const texLoader = new THREE.TextureLoader();
         const textureCache = new Map();
-        const MAX_CACHED_TEXTURES = 24; // Cache only nearby cards
+        const MAX_CACHED_TEXTURES = 64; // Cache more fronts so 78 ใบโหลดลื่นขึ้น
         
         function makeTex(url) {
             const t = texLoader.load(url);
@@ -844,8 +815,17 @@
 
         let pinch = false, pinchEdgeOn = false, pinchEdgeOff = false;
         let openHold = 0;
-        let lastHandX = null;
-        let shakeEnergy = 0;
+        let twoHandFrameCount = 0;
+
+        const shuffleTemp = new THREE.Vector3();
+        const handShuffleState = {
+            active: false,
+            frame: 0,
+            leftAnchor: new THREE.Vector3(-4, 1.1, HAND_SHUFFLE_Z),
+            rightAnchor: new THREE.Vector3(4, 1.1, HAND_SHUFFLE_Z),
+            restorePick: null
+        };
+        let pendingDeckShuffle = false;
 
         function setCursorFromLandmark(normX, normY) {
             const x = 1 - normX; // mirror
@@ -884,12 +864,11 @@
             const pin = lm[20].y < lm[18].y;
             return [idx, mid, ring, pin].filter(Boolean).length >= 3;
         }
-        function isFist(lm) {
-            const idx = lm[8].y > lm[6].y;
-            const mid = lm[12].y > lm[10].y;
-            const ring = lm[16].y > lm[14].y;
-            const pin = lm[20].y > lm[18].y;
-            return [idx, mid, ring, pin].filter(Boolean).length >= 3;
+
+        function selectPrimaryHand(hands) {
+            if (!hands.length) return null;
+            const right = hands.find((h) => h.handedness === "Right");
+            return right || hands[0];
         }
 
         function computeHover() {
@@ -973,19 +952,19 @@
             const m = meta.meaning;
             readingContent.innerHTML = `
                 <div class="reading-category">
-                    <div class="reading-cat-title">Work</div>
+                    <div class="reading-cat-title">การงาน</div>
                     <div class="reading-cat-text">${m.work}</div>
                 </div>
                 <div class="reading-category">
-                    <div class="reading-cat-title">Money</div>
+                    <div class="reading-cat-title">การเงิน</div>
                     <div class="reading-cat-text">${m.money}</div>
                 </div>
                 <div class="reading-category">
-                    <div class="reading-cat-title">Love</div>
+                    <div class="reading-cat-title">ความรัก</div>
                     <div class="reading-cat-text">${m.love}</div>
                 </div>
                 <div class="reading-category">
-                    <div class="reading-cat-title">Advice</div>
+                    <div class="reading-cat-title">คำแนะนำ</div>
                     <div class="reading-cat-text">${m.advice}</div>
                 </div>
             `;
@@ -1000,6 +979,22 @@
         // --------------------------
         let spreadMode = false;
         let spreadCards = [];
+
+        function getNextEmptySpreadSlot() {
+            return spreadCards.find(s => s.cardId === null);
+        }
+
+        function autoPlaceSelectedCard() {
+            if (!selectedCard) return;
+            const slot = getNextEmptySpreadSlot();
+            if (!slot) {
+                hud.textContent = "เลือกครบ 7 ใบแล้ว กด R เพื่ออ่านข้อความทำนาย";
+                selectedCard.userData.isSelected = false;
+                selectedCard = null;
+                return;
+            }
+            placeCardInSpread(slot.posId);
+        }
 
         function initSpreadUI() {
             spreadZones.innerHTML = "";
@@ -1043,25 +1038,29 @@
 
         function enterSpreadMode() {
             spreadMode = true;
+            resetAfterReading();
             initSpreadUI();
             spreadContainer.style.display = "block";
             hideReading();
-            hud.textContent = "📍 Select card, then tap position to place it. #/7 cards placed.";
+            hud.textContent = "โหมด Horseshoe: เลือกไพ่ทีละใบ ระบบจะจัดเรียงเป็นรูปเกือกม้า";
         }
 
         function exitSpreadMode() {
             spreadMode = false;
             spreadContainer.style.display = "none";
             spreadCards = [];
-            hud.textContent = "Ready";
+            hud.textContent = "พร้อมใช้งาน";
+            resetAfterReading();
+            initDeck();
+            dealVisible();
         }
 
         function updateSpreadDisplay() {
             const placedCount = spreadCards.filter(s => s.cardId !== null).length;
-            hud.textContent = `📍 7-Card Spread: ${placedCount}/7 cards placed`;
+            hud.textContent = `จัดไพ่ Horseshoe แล้ว ${placedCount}/7 ใบ`;
             
             if (placedCount === 7) {
-                hud.textContent = `✅ 7-Card Spread Complete! Click to view reading`;
+                hud.textContent = `ครบ 7 ใบแล้ว กด R เพื่ออ่านข้อความทำนาย`;
             }
         }
 
@@ -1119,8 +1118,11 @@
             // In spread mode, show a placeholder and highlight dropzones
             if (spreadMode) {
                 selectedCard = card;
-                hud.textContent = `📍 Click a position to place "${card.userData.meta.name}" in the spread`;
-                spreadZones.classList.add("active");
+                addToHistory(card);
+                const slot = getNextEmptySpreadSlot();
+                const slotLabel = slot ? slot.posId : 7;
+                hud.textContent = `กำลังวางไพ่ใบที่ ${slotLabel}/7`;
+                autoPlaceSelectedCard();
                 return;
             }
 
@@ -1159,9 +1161,9 @@
             spreadSlot.element.classList.add("filled");
 
             // Reset selection
+            selectedCard.visible = false;
             selectedCard.userData.isSelected = false;
             selectedCard = null;
-            spreadZones.classList.remove("active");
 
             updateSpreadDisplay();
             
@@ -1218,6 +1220,74 @@
             rotationT += (Math.random() * 2 - 1) * 1.8;
         }
 
+        function handToWorldX(hand) {
+            const mirroredX = 1 - hand.lm[0].x;
+            const ndcX = (mirroredX * 2) - 1;
+            return THREE.MathUtils.clamp(ndcX * 4.5, -5.5, 5.5);
+        }
+
+        function startHandShuffle(handInfo) {
+            if (handShuffleState.active || selectedCard || grabbedCard) return;
+            if (!Array.isArray(handInfo) || handInfo.length < 2) return;
+
+            const sorted = [...handInfo].sort((a, b) => a.lm[0].x - b.lm[0].x);
+            const leftHand = sorted[0];
+            const rightHand = sorted[sorted.length - 1];
+
+            let leftX = handToWorldX(leftHand);
+            let rightX = handToWorldX(rightHand);
+            if (Math.abs(rightX - leftX) < 2) {
+                leftX = -4;
+                rightX = 4;
+            }
+
+            const baseY = 1.15;
+            handShuffleState.leftAnchor.set(leftX, baseY, HAND_SHUFFLE_Z);
+            handShuffleState.rightAnchor.set(rightX, baseY, HAND_SHUFFLE_Z);
+            handShuffleState.active = true;
+            handShuffleState.frame = 0;
+            handShuffleState.restorePick = allowPick;
+            allowPick = false;
+            pendingDeckShuffle = true;
+        }
+
+        function updateHandShuffle() {
+            if (!handShuffleState.active) return;
+            handShuffleState.frame += 1;
+
+            const total = HAND_SHUFFLE_DURATION;
+            const waveHead = (handShuffleState.frame / total) * (DISPLAY_N + 6);
+
+            for (const card of cards) {
+                if (!card.visible || card === grabbedCard || card.userData.isSelected) continue;
+                const slotIndex = card.userData.slot;
+                const local = waveHead - slotIndex;
+                if (local < 0 || local > 3) continue;
+
+                const t = Math.min(1, Math.max(0, local / 3));
+                shuffleTemp.copy(handShuffleState.leftAnchor).lerp(handShuffleState.rightAnchor, t);
+                shuffleTemp.y += Math.sin(t * Math.PI) * HAND_SHUFFLE_ARC;
+
+                card.position.lerp(shuffleTemp, 0.35);
+                card.rotation.x += (0 - card.rotation.x) * 0.2;
+                card.rotation.z += (0 - card.rotation.z) * 0.2;
+                card.rotation.y += (Math.PI - card.rotation.y) * 0.2;
+            }
+
+            if (handShuffleState.frame >= total) {
+                handShuffleState.active = false;
+                handShuffleState.frame = 0;
+                if (pendingDeckShuffle) {
+                    shuffleDeck();
+                    pendingDeckShuffle = false;
+                }
+                if (handShuffleState.restorePick) {
+                    allowPick = true;
+                }
+                handShuffleState.restorePick = null;
+            }
+        }
+
         // --------------------------
         // Camera cinematic
         // --------------------------
@@ -1253,7 +1323,7 @@
                 lastHoverUpdate = frameCount;
             }
 
-            if (!freezeOthers && layoutMode === "ring" && !grabbedCard && allowPick) {
+            if (!freezeOthers && layoutMode === "ring" && !grabbedCard && allowPick && !handShuffleState.active) {
                 rotationT += 0.006;
             }
 
@@ -1294,7 +1364,7 @@
 
                 c.position.lerp(CENTER_POS, ease);
                 // Smaller size as requested
-                c.scale.lerp(new THREE.Vector3(1.05, 1.05, 1.05), 0.10);
+                c.scale.lerp(new THREE.Vector3(1.25, 1.25, 1.25), 0.10);
 
                 c.rotation.x += (0 - c.rotation.x) * 0.18;
                 c.rotation.z += (0 - c.rotation.z) * 0.18;
@@ -1305,6 +1375,7 @@
                 c.rotation.y = Math.PI * (1 - fe);
             }
 
+            updateHandShuffle();
             updateCamera();
             renderer.render(scene, camera3D);
         }
@@ -1314,11 +1385,11 @@
             
             const placedCards = spreadCards.filter(s => s.cardId !== null);
             if (placedCards.length === 0) {
-                hud.textContent = "❌ No cards placed yet";
+                hud.textContent = "ยังไม่ได้เลือกไพ่สำหรับผังนี้";
                 return;
             }
 
-            readingTitle.textContent = "7-Card Spread Reading";
+            readingTitle.textContent = "คำทำนายผัง 7 ใบ (Horseshoe)";
             readingContent.innerHTML = "";
 
             placedCards.forEach((slot) => {
@@ -1329,13 +1400,13 @@
                 const meaning = card.userData.meta.meaning;
                 const categoryHtml = `
                     <div class="reading-category">
-                        <div style="font-weight: 700; color: #ffd700; margin-bottom: 6px;">Position ${pos.id}: ${pos.name}</div>
+                        <div style="font-weight: 700; color: #ffd700; margin-bottom: 6px;">ตำแหน่ง ${pos.id}: ${pos.name}</div>
                         <div class="reading-cat-text">${pos.description}</div>
                         <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">
                             <div style="font-size: 12px; color: rgba(0, 255, 200, 0.8); font-weight: 700;">${slot.cardName}</div>
                             <div style="font-size: 11px; line-height: 1.3; margin-top: 4px;">
-                                <strong>Love:</strong> ${meaning.love}<br>
-                                <strong>Work:</strong> ${meaning.work}
+                                <strong>ความรัก:</strong> ${meaning.love}<br>
+                                <strong>การงาน:</strong> ${meaning.work}
                             </div>
                         </div>
                     </div>
@@ -1380,7 +1451,7 @@
         });
 
         hands.setOptions({
-            maxNumHands: 1,
+            maxNumHands: 2,
             modelComplexity: 0, // Use lite model for speed
             minDetectionConfidence: 0.5, // Lower threshold for faster detection
             minTrackingConfidence: 0.5,
@@ -1390,14 +1461,29 @@
             cursorValid = false;
             reticle.style.display = "none";
 
-            if (res.multiHandLandmarks && res.multiHandLandmarks.length) {
-                const lm = res.multiHandLandmarks[0];
+            const landmarks = res.multiHandLandmarks || [];
+            const handedness = res.multiHandedness || [];
+            const handInfo = landmarks.map((lm, idx) => ({
+                lm,
+                handedness: handedness[idx]?.label || `Hand${idx}`,
+                isOpen: isOpenPalm(lm)
+            }));
 
-                setCursorFromLandmark(lm[8].x, lm[8].y);
+            const handCount = handInfo.length;
+            if (handCount === 0) {
+                pinch = false;
+                pinchEdgeOn = false;
+                pinchEdgeOff = false;
+                hud.textContent = "ยกมือขึ้นเพื่อเริ่ม";
+                return;
+            }
 
-                const dist = updatePinch(lm);
-                const openPalm = isOpenPalm(lm);
-                const fist = isFist(lm);
+            const primary = selectPrimaryHand(handInfo);
+            if (primary) {
+                setCursorFromLandmark(primary.lm[8].x, primary.lm[8].y);
+
+                updatePinch(primary.lm);
+                const openPalm = primary.isOpen;
 
                 if (openPalm) openHold += 1 / 60;
                 else openHold = Math.max(0, openHold - 2 / 60);
@@ -1407,38 +1493,40 @@
                     openHold = 0;
                 }
 
-                if (!selectedCard && allowPick && !grabbedCard) {
-                    if (openPalm) layoutMode = "fan";
-                    else layoutMode = "ring";
-                }
-
-                const hx = lm[0].x;
-                if (lastHandX !== null) {
-                    const dx = Math.abs(hx - lastHandX);
-                    if (fist && allowPick && !grabbedCard && !selectedCard) {
-                        shakeEnergy += dx * 10;
-                        shakeEnergy *= 0.92;
-                    } else {
-                        shakeEnergy *= 0.85;
-                    }
-                }
-                lastHandX = hx;
-
-                if (shakeEnergy > SHAKE_TRIGGER && fist && allowPick && !grabbedCard && !selectedCard) {
-                    shuffleDeck();
-                    shakeEnergy = 0;
-                }
-
                 if (pinchEdgeOn && !grabbedCard && allowPick) beginGrab();
                 if (pinchEdgeOff && grabbedCard) endGrab();
-
-                hud.textContent =
-                    `Mode: ${layoutMode.toUpperCase()} | Pinch: ${pinch ? "ON" : "OFF"} | ` +
-                    (grabbedCard ? "Grabbing" : "Hovering");
-
             } else {
-                hud.textContent = "Show your hand to start";
+                pinch = false;
+                pinchEdgeOn = false;
+                pinchEdgeOff = false;
             }
+
+            if (!selectedCard && allowPick && !grabbedCard) {
+                if (handCount === 1) layoutMode = "fan";
+                else if (handCount >= 2) layoutMode = "ring";
+            }
+
+            const openHands = handInfo.filter((h) => h.isOpen);
+            if (
+                handInfo.length >= 2 &&
+                openHands.length >= 2 &&
+                !handShuffleState.active &&
+                allowPick &&
+                !selectedCard &&
+                !grabbedCard
+            ) {
+                twoHandFrameCount = Math.min(TWO_HAND_HOLD_FRAMES, twoHandFrameCount + 1);
+                if (twoHandFrameCount >= TWO_HAND_HOLD_FRAMES) {
+                    startHandShuffle(handInfo);
+                    twoHandFrameCount = 0;
+                }
+            } else {
+                twoHandFrameCount = Math.max(0, twoHandFrameCount - 1);
+            }
+
+            hud.textContent =
+                `โหมด: ${layoutMode === "fan" ? "พัด" : "วงกลม"} | มือที่พบ: ${handCount} | ` +
+                (grabbedCard ? "กำลังหยิบไพ่" : pinch ? "กำลังจับ" : "พร้อมเลือก");
         });
 
         async function startCamera() {
