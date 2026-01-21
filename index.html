@@ -158,8 +158,8 @@
             position: fixed;
             left: 50%;
             top: 50%;
-            width: 260px;
-            height: 340px;
+            width: 320px;
+            height: 420px;
             transform: translate(-50%, -50%);
             border: 2px dashed rgba(255, 255, 255, .16);
             border-radius: 18px;
@@ -312,7 +312,7 @@
         // CONFIG
         // --------------------------
         const FRONT_COUNT = 78;
-        const DISPLAY_N = 18;
+        const DISPLAY_N = 28; // Increased from 18 - more cards to choose from
         const cardW = 1.6;
         const cardH = 2.4;
 
@@ -327,15 +327,15 @@
         // Center (selected)
         const CENTER_POS = new THREE.Vector3(0, 1.28, 2.25);
 
-        // Pinch thresholds
-        const PINCH_ON = 0.035;
-        const PINCH_OFF = 0.050;
+        // Pinch thresholds (looser for easier picking)
+        const PINCH_ON = 0.045; // Made it easier to trigger pinch
+        const PINCH_OFF = 0.065; // More forgiving release
 
         // Gesture thresholds
         const OPEN_HOLD_TO_CLOSE = 1.0;
         const SHAKE_TRIGGER = 0.65;
         const DRAG_DOWN_THRESHOLD = -0.4; // Slightly more drag down for Fan mode
-        const RING_SELECT_DRAG_DIST = 1.5; // Minimum drag distance in Ring mode to select
+        const RING_SELECT_DRAG_DIST = 0.8; // Reduced from 1.5 - less drag needed to pick
 
         // --------------------------
         // DATA (From CSV)
@@ -385,10 +385,34 @@
         }
 
         // --------------------------
-        // Texture paths (00.jpeg .. 77.jpeg)
+        // Texture paths (00.webp .. 77.webp or fallback to .jpeg)
         // --------------------------
+        let webpSupported = null;
+        
+        async function checkWebPSupport() {
+            if (webpSupported !== null) return webpSupported;
+            
+            return new Promise(resolve => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 1;
+                canvas.height = 1;
+                try {
+                    resolve(canvas.toDataURL('image/webp').indexOf('image/webp') === 5);
+                } catch {
+                    resolve(false);
+                }
+            }).then(supported => {
+                webpSupported = supported;
+                return supported;
+            });
+        }
+        
         function frontPathByCardIndex(id0) {
-            return `./assets/fronts/${String(id0).padStart(2, "0")}.jpeg`;
+            const num = String(id0).padStart(2, "0");
+            // Try WebP first if supported, fallback to JPEG
+            return webpSupported === true 
+                ? `./assets/fronts/${num}_opt.webp` 
+                : `./assets/fronts/${num}.jpeg`;
         }
 
         // --------------------------
@@ -664,11 +688,11 @@
             
             hoverCard = found;
 
-            // highlight with reduced smoothness
+            // highlight with stronger feedback
             for (const c of cards) {
                 if (c.userData.isSelected) continue;
-                const target = (hoverCard === c) ? 1.1 : 1.0;
-                c.scale.lerp(new THREE.Vector3(target, target, target), 0.24); // Increased lerp speed
+                const target = (hoverCard === c) ? 1.15 : 1.0; // Stronger hover effect
+                c.scale.lerp(new THREE.Vector3(target, target, target), 0.28); // Faster response
             }
         }
 
@@ -1043,6 +1067,7 @@
         }
 
         try {
+            await checkWebPSupport();
             await startCamera();
             animate();
         } catch (e) {
