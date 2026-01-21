@@ -1,0 +1,429 @@
+{
+  "spreads": {
+    "threeCard": {
+      "name": "3-Card Spread",
+      "positions": [
+        {
+          "id": 1,
+          "name": "Past",
+          "meaning": "Influences & events that led to current situation"
+        },
+        {
+          "id": 2,
+          "name": "Present",
+          "meaning": "Current state, challenges, circumstances now"
+        },
+        {
+          "id": 3,
+          "name": "Future",
+          "meaning": "Likely outcome, guidance, what's coming"
+        }
+      ]
+    },
+    "sevenCard": {
+      "name": "7-Card Spread",
+      "positions": [
+        {
+          "id": 1,
+          "name": "Situation",
+          "meaning": "Current circumstances & context"
+        },
+        {
+          "id": 2,
+          "name": "Challenge",
+          "meaning": "Obstacle or difficulty to overcome"
+        },
+        {
+          "id": 3,
+          "name": "Advice",
+          "meaning": "Guidance for moving forward"
+        },
+        {
+          "id": 4,
+          "name": "Near Future",
+          "meaning": "Short-term outcome (1-3 months)"
+        },
+        {
+          "id": 5,
+          "name": "External Influence",
+          "meaning": "Outside factors affecting situation"
+        },
+        {
+          "id": 6,
+          "name": "Internal Influence",
+          "meaning": "Your feelings, thoughts, inner state"
+        },
+        {
+          "id": 7,
+          "name": "Final Outcome",
+          "meaning": "Long-term result if current path continues"
+        }
+      ]
+    },
+    "celticCross": {
+      "name": "Celtic Cross (10-Card)",
+      "positions": [
+        {
+          "id": 1,
+          "name": "Significator",
+          "meaning": "You or the heart of the matter"
+        },
+        {
+          "id": 2,
+          "name": "Cross",
+          "meaning": "What influences or crosses you"
+        },
+        {
+          "id": 3,
+          "name": "Crown",
+          "meaning": "Your hopes or ideals"
+        },
+        {
+          "id": 4,
+          "name": "Base",
+          "meaning": "Foundation or root of the matter"
+        },
+        {
+          "id": 5,
+          "name": "Past",
+          "meaning": "Recent influences or past"
+        },
+        {
+          "id": 6,
+          "name": "Future",
+          "meaning": "Likely outcome (weeks)"
+        },
+        {
+          "id": 7,
+          "name": "Self",
+          "meaning": "How you see yourself"
+        },
+        {
+          "id": 8,
+          "name": "Environment",
+          "meaning": "External influences & people"
+        },
+        {
+          "id": 9,
+          "name": "Hopes/Fears",
+          "meaning": "What you hope for or fear"
+        },
+        {
+          "id": 10,
+          "name": "Final Outcome",
+          "meaning": "Final result & culmination"
+        }
+      ]
+    }
+  },
+  "majorArcana": [
+    {
+      "id": 0,
+      "name": "The Fool",
+      "meanings": {
+        "upright": "New beginnings, taking risks, spontaneity, innocence",
+        "love": "New relationship, excitement, adventure, unpredictability",
+        "money": "Speculation, investment opportunity, financial risk",
+        "work": "New job, freelance work, unconventional career path",
+        "advice": "Trust your instincts, be brave, explore possibilities"
+      }
+    },
+    {
+      "id": 1,
+      "name": "The Magician",
+      "meanings": {
+        "upright": "Manifestation, resourcefulness, power, inspired action",
+        "love": "Charisma, charm, connection, communication",
+        "money": "New business venture, financial opportunity, skill",
+        "work": "Promotion, new skills, communication, networking",
+        "advice": "Use your talents, take action, manifest your goals"
+      }
+    },
+    {
+      "id": 2,
+      "name": "The High Priestess",
+      "meanings": {
+        "upright": "Intuition, hidden knowledge, divine feminine, subconscious",
+        "love": "Intuitive connection, secrets, mystery in relationships",
+        "money": "Trust your intuition about finances, hidden opportunities",
+        "work": "Research, analysis, listening, female mentor/guide",
+        "advice": "Listen to your intuition, look beyond the surface"
+      }
+    },
+    {
+      "id": 3,
+      "name": "The Empress",
+      "meanings": {
+        "upright": "Fertility, femininity, beauty, abundance, creation",
+        "love": "Love, nurturing, pregnancy, commitment, sensuality",
+        "money": "Abundance, prosperity, financial growth",
+        "work": "Creative projects, teamwork, female leadership",
+        "advice": "Nurture yourself and others, embrace abundance"
+      }
+    },
+    {
+      "id": 4,
+      "name": "The Emperor",
+      "meanings": {
+        "upright": "Authority, leadership, structure, control, discipline",
+        "love": "Commitment, stability, partnership, male figure",
+        "money": "Financial control, structured investments, wealth",
+        "work": "Leadership position, male mentor, authority",
+        "advice": "Take charge, establish boundaries, be assertive"
+      }
+    },
+    {
+      "id": 5,
+      "name": "The Hierophant",
+      "meanings": {
+        "upright": "Spirituality, tradition, conformity, education, beliefs",
+        "love": "Traditional relationship, marriage, commitment",
+        "money": "Conservative financial approach, traditional investments",
+        "work": "Education, religion, counseling, teaching",
+        "advice": "Follow tradition, seek guidance, respect authority"
+      }
+    },
+    {
+      "id": 6,
+      "name": "The Lovers",
+      "meanings": {
+        "upright": "Love, harmony, relationships, values alignment, choice",
+        "love": "Deep love, mutual attraction, soulmate connection",
+        "money": "Partnership in finances, shared resources",
+        "work": "Collaboration, teamwork, partnership",
+        "advice": "Follow your heart, make choices aligned with values"
+      }
+    },
+    {
+      "id": 7,
+      "name": "The Chariot",
+      "meanings": {
+        "upright": "Control, willpower, determination, victory, momentum",
+        "love": "Moving relationship forward, travel together, passion",
+        "money": "Financial momentum, control over resources",
+        "work": "Promotion, taking control, success, determination",
+        "advice": "Stay focused, take control, drive forward with purpose"
+      }
+    },
+    {
+      "id": 8,
+      "name": "Strength",
+      "meanings": {
+        "upright": "Inner strength, courage, patience, control, compassion",
+        "love": "Inner strength in relationships, compassion, patience",
+        "money": "Financial stability through patience, steady growth",
+        "work": "Patience, perseverance, inner strength in challenges",
+        "advice": "Be patient, show compassion, use inner strength"
+      }
+    },
+    {
+      "id": 9,
+      "name": "The Hermit",
+      "meanings": {
+        "upright": "Introspection, soul searching, inner guidance, reflection",
+        "love": "Need for solitude, inner work on relationships",
+        "money": "Taking time to assess finances, retirement planning",
+        "work": "Self-reflection, solo work, wisdom from experience",
+        "advice": "Seek inner truth, take time for reflection"
+      }
+    },
+    {
+      "id": 10,
+      "name": "Wheel of Fortune",
+      "meanings": {
+        "upright": "Good luck, karma, life cycles, destiny, turning point",
+        "love": "Turning point in relationship, fated meeting, cycles",
+        "money": "Lucky financial turn, inheritance, windfalls",
+        "work": "Career turning point, promotions, cycles",
+        "advice": "Accept change, trust in cycles, embrace destiny"
+      }
+    },
+    {
+      "id": 11,
+      "name": "Justice",
+      "meanings": {
+        "upright": "Justice, fairness, truth, accountability, cause and effect",
+        "love": "Fair decisions, honesty in relationships, balance",
+        "money": "Fair financial dealings, lawsuits, contracts",
+        "work": "Fairness, legal matters, HR decisions",
+        "advice": "Be fair, seek truth, take responsibility"
+      }
+    },
+    {
+      "id": 12,
+      "name": "The Hanged Man",
+      "meanings": {
+        "upright": "Suspension, restriction, letting go, new perspective",
+        "love": "Putting relationship on hold, sacrifice, new view",
+        "money": "Suspending financial decisions, moratorium",
+        "work": "Career pause, suspension, waiting period",
+        "advice": "Let go of control, gain new perspective, be patient"
+      }
+    },
+    {
+      "id": 13,
+      "name": "Death",
+      "meanings": {
+        "upright": "Transformation, endings, new beginnings, change, transition",
+        "love": "End of relationship phase, transformation, new chapter",
+        "money": "Financial transition, inheritance, significant change",
+        "work": "Career change, job ending, new direction",
+        "advice": "Embrace change, let go of old, welcome new"
+      }
+    },
+    {
+      "id": 14,
+      "name": "Temperance",
+      "meanings": {
+        "upright": "Balance, moderation, harmony, patience, finding meaning",
+        "love": "Balance in relationship, moderation, harmony",
+        "money": "Balanced finances, moderation in spending",
+        "work": "Work-life balance, harmony in workplace",
+        "advice": "Seek balance, practice moderation, find harmony"
+      }
+    },
+    {
+      "id": 15,
+      "name": "The Devil",
+      "meanings": {
+        "upright": "Bondage, materialism, playfulness, shadow self, addiction",
+        "love": "Passionate connection, domination, dependency",
+        "money": "Financial strain, debt, materialism",
+        "work": "Feeling trapped, difficult workplace, power issues",
+        "advice": "Recognize limitations, break free from patterns"
+      }
+    },
+    {
+      "id": 16,
+      "name": "The Tower",
+      "meanings": {
+        "upright": "Upheaval, sudden change, revelation, breakdown, crisis",
+        "love": "Sudden breakup, shocking truth, relationship crisis",
+        "money": "Financial crisis, unexpected loss, collapse",
+        "work": "Job loss, sudden change, workplace disruption",
+        "advice": "Accept change, rebuild from foundation"
+      }
+    },
+    {
+      "id": 17,
+      "name": "The Star",
+      "meanings": {
+        "upright": "Hope, faith, purpose, inspiration, spirituality",
+        "love": "Hope in love, inspiration, spiritual connection",
+        "money": "Hope for financial improvement, new opportunities",
+        "work": "Career inspiration, purpose-driven work",
+        "advice": "Keep faith, follow your dreams, stay inspired"
+      }
+    },
+    {
+      "id": 18,
+      "name": "The Moon",
+      "meanings": {
+        "upright": "Illusion, fear, anxiety, subconscious, intuition",
+        "love": "Confusion, hidden feelings, intuitive insights",
+        "money": "Uncertainty, unclear finances, deception",
+        "work": "Confusion, unclear decisions, intuitive work",
+        "advice": "Trust intuition, clarify confusion, face fears"
+      }
+    },
+    {
+      "id": 19,
+      "name": "The Sun",
+      "meanings": {
+        "upright": "Success, vitality, joy, positivity, growth, clarity",
+        "love": "Happy love, joy, success in relationships",
+        "money": "Financial success, abundance, prosperity",
+        "work": "Success, happiness, promotion, growth",
+        "advice": "Embrace positivity, celebrate success, be joyful"
+      }
+    },
+    {
+      "id": 20,
+      "name": "Judgement",
+      "meanings": {
+        "upright": "Reckoning, awakening, renewal, calling, absolution",
+        "love": "Important decision, awakening to love, renewal",
+        "money": "Financial reckoning, awakening to abundance",
+        "work": "Career calling, important decision, renewal",
+        "advice": "Answer your calling, make important decisions"
+      }
+    },
+    {
+      "id": 21,
+      "name": "The World",
+      "meanings": {
+        "upright": "Completion, accomplishment, travel, wholeness, fulfillment",
+        "love": "Relationship completion, marriage, fulfillment",
+        "money": "Financial completion, wealth accumulation, success",
+        "work": "Career completion, success, accomplishment",
+        "advice": "Complete cycles, celebrate accomplishments, embrace wholeness"
+      }
+    }
+  ],
+  "minorArcana": {
+    "wands": [
+      {"id": 22, "name": "Ace of Wands", "meanings": {"upright": "New opportunity, growth, potential, inspiration", "work": "New project, promotion, creative opportunity"}},
+      {"id": 23, "name": "Two of Wands", "meanings": {"upright": "Planning, making decisions, leaving home", "work": "Career planning, considering new opportunities"}},
+      {"id": 24, "name": "Three of Wands", "meanings": {"upright": "Expansion, foresight, progress, overseas", "work": "Business growth, international opportunities"}},
+      {"id": 25, "name": "Four of Wands", "meanings": {"upright": "Celebration, harmony, home, reunion", "work": "Celebration, team success, milestone"}},
+      {"id": 26, "name": "Five of Wands", "meanings": {"upright": "Conflict, competition, tension, diversity", "work": "Workplace conflict, competition, stress"}},
+      {"id": 27, "name": "Six of Wands", "meanings": {"upright": "Success, public recognition, confidence", "work": "Promotion, recognition, leadership"}},
+      {"id": 28, "name": "Seven of Wands", "meanings": {"upright": "Challenge, competition, perseverance", "work": "Defending position, overcoming challenges"}},
+      {"id": 29, "name": "Eight of Wands", "meanings": {"upright": "Swiftness, action, momentum, travel", "work": "Quick progress, rapid advancement"}},
+      {"id": 30, "name": "Nine of Wands", "meanings": {"upright": "Resilience, courage, last stand", "work": "Perseverance through challenges"}},
+      {"id": 31, "name": "Ten of Wands", "meanings": {"upright": "Burden, responsibility, hard work", "work": "Overwork, heavy responsibilities"}},
+      {"id": 32, "name": "Page of Wands", "meanings": {"upright": "Enthusiasm, exploration, discovery", "work": "Enthusiastic colleague, new employee"}},
+      {"id": 33, "name": "Knight of Wands", "meanings": {"upright": "Energy, passion, adventure, impulsiveness", "work": "Energetic colleague, quick action"}},
+      {"id": 34, "name": "Queen of Wands", "meanings": {"upright": "Confidence, independence, determination", "work": "Confident female leader, entrepreneur"}},
+      {"id": 35, "name": "King of Wands", "meanings": {"upright": "Leadership, vision, entrepreneurship", "work": "Visionary leader, CEO"}}
+    ],
+    "cups": [
+      {"id": 36, "name": "Ace of Cups", "meanings": {"upright": "New emotion, new relationship, compassion", "love": "New love, emotional opening"}},
+      {"id": 37, "name": "Two of Cups", "meanings": {"upright": "Partnership, mutual attraction, unity", "love": "Romantic partnership, deep connection"}},
+      {"id": 38, "name": "Three of Cups", "meanings": {"upright": "Celebration, friendship, gathering", "love": "Social happiness, friendship"}},
+      {"id": 39, "name": "Four of Cups", "meanings": {"upright": "Apathy, contemplation, reevaluation", "love": "Relationship stagnation, emotional uncertainty"}},
+      {"id": 40, "name": "Five of Cups", "meanings": {"upright": "Loss, despair, grief, sorrow", "love": "Heartbreak, loss, grief"}},
+      {"id": 41, "name": "Six of Cups", "meanings": {"upright": "Familiarity, nostalgia, childhood", "love": "Reconnection with past love, innocence"}},
+      {"id": 42, "name": "Seven of Cups", "meanings": {"upright": "Illusion, wishful thinking, fantasy", "love": "Unrealistic expectations, confusion"}},
+      {"id": 43, "name": "Eight of Cups", "meanings": {"upright": "Abandonment, withdrawal, seeking meaning", "love": "Walking away from relationship"}},
+      {"id": 44, "name": "Nine of Cups", "meanings": {"upright": "Satisfaction, contentment, wishes fulfilled", "love": "Emotional fulfillment, happiness"}},
+      {"id": 45, "name": "Ten of Cups", "meanings": {"upright": "Harmony, happiness, family, alignment", "love": "Perfect relationship, family happiness"}},
+      {"id": 46, "name": "Page of Cups", "meanings": {"upright": "Emotional sensitivity, creativity, naivety", "love": "Sensitive person, creative expression"}},
+      {"id": 47, "name": "Knight of Cups", "meanings": {"upright": "Romance, charm, creativity, imagination", "love": "Romantic suitor, charming person"}},
+      {"id": 48, "name": "Queen of Cups", "meanings": {"upright": "Emotional intuition, sensitivity, artistic", "love": "Intuitive woman, nurturing partner"}},
+      {"id": 49, "name": "King of Cups", "meanings": {"upright": "Emotional balance, creativity, control", "love": "Emotionally balanced partner, counselor"}}
+    ],
+    "swords": [
+      {"id": 50, "name": "Ace of Swords", "meanings": {"upright": "Truth, clarity, mental breakthrough", "work": "Clear thinking, breakthrough solution"}},
+      {"id": 51, "name": "Two of Swords", "meanings": {"upright": "Indecision, stalemate, difficult choice", "work": "Difficult decision, blocked progress"}},
+      {"id": 52, "name": "Three of Swords", "meanings": {"upright": "Heartbreak, emotional pain, sorrow", "love": "Breakup, heartache, difficult conversation"}},
+      {"id": 53, "name": "Four of Swords", "meanings": {"upright": "Rest, recovery, contemplation, truce", "work": "Break needed, recovery time"}},
+      {"id": 54, "name": "Five of Swords", "meanings": {"upright": "Defeat, loss, conflict, tension", "work": "Conflict, loss, difficult situation"}},
+      {"id": 55, "name": "Six of Swords", "meanings": {"upright": "Transition, moving forward, travel", "work": "Change, moving on, new beginning"}},
+      {"id": 56, "name": "Seven of Swords", "meanings": {"upright": "Deception, betrayal, cunning, theft", "work": "Betrayal, dishonesty, theft"}},
+      {"id": 57, "name": "Eight of Swords", "meanings": {"upright": "Restriction, confusion, powerlessness", "work": "Feeling trapped, limited options"}},
+      {"id": 58, "name": "Nine of Swords", "meanings": {"upright": "Anxiety, suffering, nightmares, despair", "work": "Stress, anxiety, sleepless nights"}},
+      {"id": 59, "name": "Ten of Swords", "meanings": {"upright": "Ending, ruin, devastation, painful closure", "work": "Job loss, project failure"}},
+      {"id": 60, "name": "Page of Swords", "meanings": {"upright": "Curiosity, information gathering, vigilance", "work": "Curious colleague, researcher"}},
+      {"id": 61, "name": "Knight of Swords", "meanings": {"upright": "Logic, analysis, communication, conflict", "work": "Analytical colleague, communicator"}},
+      {"id": 62, "name": "Queen of Swords", "meanings": {"upright": "Clarity, independence, intellectual, widowhood", "work": "Independent thinker, clear communicator"}},
+      {"id": 63, "name": "King of Swords", "meanings": {"upright": "Clarity, logic, authority, power", "work": "Authoritative leader, judge"}}
+    ],
+    "pentacles": [
+      {"id": 64, "name": "Ace of Pentacles", "meanings": {"upright": "Opportunity, prosperity, new financial beginning", "money": "Financial opportunity, investment"}},
+      {"id": 65, "name": "Two of Pentacles", "meanings": {"upright": "Balance, adaptability, time management", "money": "Juggling finances, balance"}},
+      {"id": 66, "name": "Three of Pentacles", "meanings": {"upright": "Teamwork, collaboration, learning, growth", "work": "Teamwork, apprenticeship, learning"}},
+      {"id": 67, "name": "Four of Pentacles", "meanings": {"upright": "Security, control, hoarding, conservatism", "money": "Financial security, stingy, holding back"}},
+      {"id": 68, "name": "Five of Pentacles", "meanings": {"upright": "Hardship, poverty, financial loss, insecurity", "money": "Financial hardship, loss"}},
+      {"id": 69, "name": "Six of Pentacles", "meanings": {"upright": "Charity, generosity, sharing, fairness", "money": "Generosity, charity, fair dealing"}},
+      {"id": 70, "name": "Seven of Pentacles", "meanings": {"upright": "Assessment, growth, investment, progress", "money": "Investment evaluation, reassessment"}},
+      {"id": 71, "name": "Eight of Pentacles", "meanings": {"upright": "Mastery, skill development, apprenticeship", "work": "Skill mastery, apprenticeship"}},
+      {"id": 72, "name": "Nine of Pentacles", "meanings": {"upright": "Abundance, prosperity, independence, luxury", "money": "Financial abundance, independence"}},
+      {"id": 73, "name": "Ten of Pentacles", "meanings": {"upright": "Wealth, family, legacy, inheritance", "money": "Inheritance, family wealth, legacy"}},
+      {"id": 74, "name": "Page of Pentacles", "meanings": {"upright": "Enthusiasm for learning, studious, ambition", "work": "Eager learner, new employee"}},
+      {"id": 75, "name": "Knight of Pentacles", "meanings": {"upright": "Hard work, responsibility, practicality", "work": "Reliable worker, responsible colleague"}},
+      {"id": 76, "name": "Queen of Pentacles", "meanings": {"upright": "Practicality, creature comforts, financial security", "money": "Practical woman, financial savvy"}},
+      {"id": 77, "name": "King of Pentacles", "meanings": {"upright": "Wealth, abundance, security, provision", "money": "Wealthy man, financial authority"}}
+    ]
+  }
+}

@@ -360,26 +360,114 @@
             "Page of Pentacles", "Knight of Pentacles", "Queen of Pentacles", "King of Pentacles"
         ];
 
+        let tarotDb = null;
+
+        async function loadTarotDatabase() {
+            if (tarotDb) return tarotDb;
+            try {
+                const res = await fetch('./tarot_meanings.json');
+                tarotDb = await res.json();
+                return tarotDb;
+            } catch (err) {
+                console.warn("Could not load tarot_meanings.json:", err);
+                return null;
+            }
+        }
+
         function getTarotMeta(id0) {
             const name = cardNames[id0] || `Card #${id0}`;
 
-            // Generate generic meanings based on suit/arcana if not provided
-            let meaning = {
+            // Try to get from loaded database first
+            if (tarotDb) {
+                // Search in Major Arcana
+                if (id0 < 22) {
+                    const major = tarotDb.majorArcana[id0];
+                    if (major) {
+                        return {
+                            id: id0,
+                            name: major.name,
+                            meaning: {
+                                work: major.meanings.work || "เปลี่ยนแปลงในหน้าที่",
+                                money: major.meanings.money || "มีการเปลี่ยนแปลงทางการเงิน",
+                                love: major.meanings.love || "ความรักมีการเปลี่ยนแปลง",
+                                advice: major.meanings.advice || "เชื่อมั่นและลงมือทำ"
+                            }
+                        };
+                    }
+                }
+                // Search in Minor Arcana - Wands (22-35)
+                else if (id0 >= 22 && id0 < 36 && tarotDb.minorArcana.wands) {
+                    const card = tarotDb.minorArcana.wands[id0 - 22];
+                    if (card) {
+                        return {
+                            id: id0,
+                            name: card.name,
+                            meaning: {
+                                work: card.meanings.work || "งานศิลปะและสร้างสรรค์",
+                                money: "โอกาสทางการเงิน",
+                                love: "ความรักมีความสดใส",
+                                advice: card.meanings.upright || "เชื่อมั่นในความสามารถ"
+                            }
+                        };
+                    }
+                }
+                // Cups (36-49)
+                else if (id0 >= 36 && id0 < 50 && tarotDb.minorArcana.cups) {
+                    const card = tarotDb.minorArcana.cups[id0 - 36];
+                    if (card) {
+                        return {
+                            id: id0,
+                            name: card.name,
+                            meaning: {
+                                work: "ความสัมพันธ์ในทีมดี",
+                                money: "ความสุขมากกว่าความร่ำรวย",
+                                love: card.meanings.love || "ความรักลึกซึ้ง",
+                                advice: card.meanings.upright || "เปิดใจและรับความรัก"
+                            }
+                        };
+                    }
+                }
+                // Swords (50-63)
+                else if (id0 >= 50 && id0 < 64 && tarotDb.minorArcana.swords) {
+                    const card = tarotDb.minorArcana.swords[id0 - 50];
+                    if (card) {
+                        return {
+                            id: id0,
+                            name: card.name,
+                            meaning: {
+                                work: card.meanings.work || "ความคิดชัดเจนในการทำงาน",
+                                money: "ต้องคิดการแก้สมการหนี้",
+                                love: card.meanings.love || "มีการสื่อสาร",
+                                advice: card.meanings.upright || "สำคัญคิดให้ชัด"
+                            }
+                        };
+                    }
+                }
+                // Pentacles (64-77)
+                else if (id0 >= 64 && id0 <= 77 && tarotDb.minorArcana.pentacles) {
+                    const card = tarotDb.minorArcana.pentacles[id0 - 64];
+                    if (card) {
+                        return {
+                            id: id0,
+                            name: card.name,
+                            meaning: {
+                                work: card.meanings.work || "ความมั่นคง",
+                                money: card.meanings.money || "ความเป็นสุข",
+                                love: "ความรักเสถียร",
+                                advice: card.meanings.upright || "จงทำงานหนักต่อไป"
+                            }
+                        };
+                    }
+                }
+            }
+
+            // Fallback to generic meanings
+            const meaning = {
                 work: "การเปลี่ยนแปลงและการเริ่มต้นใหม่ในทิศทางที่ดี",
                 money: "มีเกณฑ์ได้รับโชคหรือผลตอบแทนจากสิ่งที่ทำ",
                 love: "ความสัมพันธ์มีความเข้าใจและพัฒนาไปในทางบวก",
                 advice: "เชื่อมั่นในสัญชาตญาณและลงมือทำทันที"
             };
-
-            // Simple randomization for variety (in real app, use DB)
-            const seeds = [
-                { w: "งานหนักแต่คุ้มค่า", m: "ระวังรายจ่ายจุกจิก", l: "คนรักเอาใจใส่ดี", a: "อดทนรอเวลาที่เหมาะสม" },
-                { w: "โอกาสใหม่กำลังเข้ามา", m: "การเงินคล่องตัวดี", l: "อาจมีเรื่องเข้าใจผิดเล็กน้อย", a: "เปิดใจรับฟังคนรอบข้าง" },
-                { w: "ระวังความขัดแย้งในทีม", m: "มีโชคลาภลอยมา", l: "คนโสดมีเกณฑ์พบรัก", a: "อย่าประมาทในทุกย่างก้าว" },
-                { w: "ผลงานโดดเด่นเข้าตาผู้ใหญ่", m: "เก็บเงินไม่อยู่", l: "ความรักหวานชื่น", a: "รักษาสมดุลชีวิตให้ดี" }
-            ];
-            const seed = seeds[id0 % seeds.length];
-            meaning = { work: seed.w, money: seed.m, love: seed.l, advice: seed.a };
 
             return { id: id0, name, meaning };
         }
@@ -563,6 +651,19 @@
 
         initDeck();
         dealVisible();
+        
+        // Load Tarot meanings database
+        loadTarotDatabase().then(() => {
+            // Re-create cards with loaded database
+            clearCards();
+            for (let i = 0; i < DISPLAY_N; i++) {
+                const id0 = dealtIds[i];
+                const c = createCard(i, id0);
+                scene.add(c);
+                cards.push(c);
+                pickables.push(...c.userData.pickMeshes);
+            }
+        });
 
         // --------------------------
         // Layout modes
